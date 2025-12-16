@@ -49,11 +49,13 @@ Implement the core logic *before* the UI.
 *   `meta.schema.ts`: Zod schema for Meta-Reasoning policies.
 *   `eval.schema.ts`: Schema for defining Golden Datasets.
 *   `library.schema.ts`: Schema for `Framework` and `DefinedTerm` (Ontology).
+*   `shacl.ttl`: **[NEW]** SHACL Shapes for validating Skill/Competency RDF validity.
 
 #### [NEW] [tests/schemas/](file:///Users/alessioantonini/Code/competencies-skills/tests/schemas/)
 *   `workflow_parser.test.ts`: Validate Markdown -> Graph parsing.
 *   `competency.test.ts`: Validate Skill Reference logic.
 *   `eval_runner.ts`: (Draft) Script to run a Skill against its Golden Dataset.
+*   `semantic_validator.ts`: **[NEW]** Script to convert Zod objects to JSON-LD and run SHACL validation.
 
 ## Phase 4: Interface Implementation
 ### Library Management Strategy

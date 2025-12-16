@@ -152,6 +152,9 @@ A Skill is a package of **Instructions** designed to be injected into an agent's
 *   **5. Quality Assurance (The "Exam")**:
     *   **Golden Dataset**: List of `{input, expected_action}` pairs.
     *   **Guardrails**: Runtime rules (e.g., "Never delete > 5 files").
+    *   **Semantic Validation (RDF/OWL)**:
+        *   **Syntactic**: Use **SHACL** (Shapes Constraint Language) to validate the JSON-LD structure against the ontology.
+        *   **Semantic**: Use an **OWL Reasoner** (e.g., HermiT, Pellet) to check for logical inconsistencies (e.g., a "Skill" cannot be a subclass of "Tool").
 *   **6. Ontology Alignment (The "Label")**:
     *   **`alignment`**: List of external IDs (e.g., ESCO URI, WikiData ID).
     *   **`type`**: Schema.org `DefinedTerm`.
@@ -297,3 +300,7 @@ guardrails:
         *   If `Heavy` -> `RequestForklift`.
     4.  **Repeat**.
 *   **App**: Vite+React App that treats GitHub as a Headless CMS (using Octokit).
+*   **Validation Pipeline**:
+    1.  **Zod**: Runtime TypeScript validation.
+    2.  **SHACL**: RDF Structure validation.
+    3.  **Evaluations**: LLM-based logical checks.

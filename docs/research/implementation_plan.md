@@ -51,23 +51,32 @@ Implement the core logic *before* the UI.
 *   `library.schema.ts`: Schema for `Framework` and `DefinedTerm` (Ontology).
 *   `shacl.ttl`: **[NEW]** SHACL Shapes for validating Skill/Competency RDF validity.
 
+#### [NEW] [src/interpreter/](file:///Users/alessioantonini/Code/competencies-skills/src/interpreter/)
+*   `md_to_jsonld.ts`: CORE Module. Parses Markdown -> AST -> JSON-LD.
+    *   **Gap Detection**: specific checks for missing branches or undefined tools.
+    *   **Ambiguity Check**: "Did you mean 'Scan' or 'Search'?"
+
 #### [NEW] [tests/schemas/](file:///Users/alessioantonini/Code/competencies-skills/tests/schemas/)
 *   `workflow_parser.test.ts`: Validate Markdown -> Graph parsing.
 *   `competency.test.ts`: Validate Skill Reference logic.
 *   `eval_runner.ts`: (Draft) Script to run a Skill against its Golden Dataset.
 *   `semantic_validator.ts`: **[NEW]** Script to convert Zod objects to JSON-LD and run SHACL validation.
 
-## Phase 4: Interface Implementation
-### Library Management Strategy
-*   **Repository Structure**:
-    *   `src/data/tools/`: Definitions of atomic Tools.
-    *   `src/data/skills/`: Flat list of Skill definitions.
-    *   `src/data/concepts/`: Ontology terms (Schema.org `DefinedTerm`).
-    *   `src/data/frameworks/`: CaSS-style Framework definitions.
-*   **Indexing**: Implement a "Knowledge Graph" builder that scans these folders and builds an in-memory graph of `Skill -> requires -> Tool`.
+## Phase 4: Interface Implementation (The "Cognitive Web")
+### Part A: Public Discovery Portal ("The Library")
+*   **Stack**: Next.js (Static Export).
+*   **Features**: Read-only explorer. Index of JSON-LD entities.
+*   **Data Source**: Fetches from raw GitHub content or `MarkdownDB` index.
 
-### Web Application
-Build the GitHub-backed web app.
+### Part B: Authoring Studio ("The Workbench")
+*   **Stack**: React/Next.js + **Auth.js** (GitHub Provider).
+*   **Requirements**:
+    *   User must Authenticate with GitHub.
+    *   User must be a collaborator on `modellingDH/competencies-skills` (or Fork).
+*   **Features**:
+    *   **Split Editor**: Markdown Input (Left) -> JSON-LD Preview (Right).
+    *   **Real-time Validation**: The `Interpreter` runs on every keystroke to flag gaps.
+    *   **Commit Workflow**: "Save" -> Creates Commit -> Pushes to Branch.
 
 ### Web Application Structure (GitHub-Backed)
 #### [NEW] [src/services/github.js](file:///Users/alessioantonini/Code/competencies-skills/src/services/github.js)

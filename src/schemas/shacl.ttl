@@ -1,0 +1,31 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema:SkillShape
+    a sh:NodeShape ;
+    sh:targetClass schema:HowTo ;
+    sh:property [
+        sh:path schema:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path schema:step ;
+        sh:minCount 1 ;
+        sh:node schema:StepShape ;
+    ] .
+
+schema:StepShape
+    a sh:NodeShape ;
+    sh:targetClass schema:HowToStep ;
+    sh:property [
+        sh:path schema:text ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path schema:name ;
+        sh:datatype xsd:string ;
+    ] .

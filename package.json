@@ -1,0 +1,38 @@
+{
+  "name": "competencies-skills",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "description": "**A GitHub-backed library for defining, managing, and instructing AI agents.**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/modellingDH/competencies-skills.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/modellingDH/competencies-skills/issues"
+  },
+  "homepage": "https://github.com/modellingDH/competencies-skills#readme",
+  "devDependencies": {
+    "@types/node": "^25.0.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "zod": "^4.2.1"
+  },
+  "dependencies": {
+    "@rdfjs/dataset": "^2.0.2",
+    "rdf-data-model": "^1.0.0",
+    "rdf-validate-shacl": "^0.6.5",
+    "remark": "^15.0.1",
+    "remark-parse": "^11.0.0",
+    "unist-util-visit": "^5.0.0"
+  }
+}

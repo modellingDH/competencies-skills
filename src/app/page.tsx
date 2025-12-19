@@ -120,10 +120,72 @@ export default function Home() {
                     </Grid>
                 </Grid>
 
-                {/* Data Table Section */}
+                {/* How It Works Section */}
+                <Box sx={{ mb: 12 }}>
+                    <Box sx={{ mb: 6, textAlign: 'center' }}>
+                        <Typography variant="h3" gutterBottom sx={{ fontWeight: 400 }}>
+                            How It Works
+                        </Typography>
+                        <Typography variant="h6" color="text.secondary">
+                            A standardized workflow for teaching AI new capabilities.
+                        </Typography>
+                    </Box>
+
+                    <Grid container spacing={6}>
+                        {/* Step 1: Create */}
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Avatar sx={{ width: 64, height: 64, mx: 'auto', bgcolor: 'primary.main', mb: 3 }}>
+                                    <AccountTreeIcon sx={{ fontSize: 32 }} />
+                                </Avatar>
+                                <Typography variant="h5" gutterBottom>1. Create</Typography>
+                                <Typography variant="body1" color="text.secondary" paragraph>
+                                    Use the **Authoring Studio** to define Skills and Competencies using
+                                    standardized schemas and Cognitive Markdown.
+                                </Typography>
+                            </Box>
+                        </Grid>
+
+                        {/* Step 2: Explore */}
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Avatar sx={{ width: 64, height: 64, mx: 'auto', bgcolor: 'primary.main', mb: 3 }}>
+                                    <PsychologyIcon sx={{ fontSize: 32 }} />
+                                </Avatar>
+                                <Typography variant="h5" gutterBottom>2. Explore</Typography>
+                                <Typography variant="body1" color="text.secondary" paragraph>
+                                    Browse the **Discovery Portal** to find existing modules, or link
+                                    external GitHub repositories to expand your local library.
+                                </Typography>
+                            </Box>
+                        </Grid>
+
+                        {/* Step 3: Use */}
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Avatar sx={{ width: 64, height: 64, mx: 'auto', bgcolor: 'primary.main', mb: 3 }}>
+                                    <SecurityIcon sx={{ fontSize: 32 }} />
+                                </Avatar>
+                                <Typography variant="h5" gutterBottom>3. Use</Typography>
+                                <Typography variant="body1" color="text.secondary" paragraph>
+                                    Inject your defined logic into agents like **Gemini, OpenAI, Claude,**
+                                    or orchestrators like **n8n** for deterministic execution.
+                                </Typography>
+                            </Box>
+                        </Grid>
+                    </Grid>
+
+                    <Box sx={{ mt: 6, textAlign: 'center' }}>
+                        <LinkButton href="/how-to" variant="outlined" color="primary" sx={{ px: 4, py: 1.5, borderRadius: 50, fontWeight: 'bold' }}>
+                            View Agent Integration Guide
+                        </LinkButton>
+                    </Box>
+                </Box>
+
+                {/* Core Definitions Section (Modified for consistency) */}
                 <Box mb={10}>
-                    <Typography variant="h4" component="h2" gutterBottom>
-                        Core Definitions
+                    <Typography variant="h4" component="h2" gutterBottom sx={{ textAlign: 'center', mb: 4 }}>
+                        Schema Standards
                     </Typography>
                     <TableContainer component={Paper} elevation={1} sx={{ borderRadius: 4, border: '1px solid #e0e2e8', overflow: 'hidden' }}>
                         <Table sx={{ minWidth: 650 }} aria-label="simple table">

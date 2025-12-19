@@ -41,8 +41,8 @@ export default function Home() {
                             </Typography>
                         </Box>
                         <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-                            <LinkButton href="/search" color="inherit" sx={{ color: 'text.secondary' }}>Discovery</LinkButton>
-                            <LinkButton href="/studio" color="inherit" sx={{ color: 'text.secondary' }}>Studio</LinkButton>
+                            <LinkButton href="/library" color="inherit" sx={{ color: 'text.secondary' }}>Library Explorer</LinkButton>
+                            <LinkButton href="/studio" color="inherit" sx={{ color: 'text.secondary' }}>Authoring Studio</LinkButton>
                             <LinkButton href="https://github.com/modellingDH/competencies-skills" color="inherit" sx={{ color: 'text.secondary' }}>GitHub</LinkButton>
                         </Box>
                     </Toolbar>
@@ -60,13 +60,13 @@ export default function Home() {
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
                         <LinkButton href="/library" variant="contained" size="large" sx={{ borderRadius: 50, px: 4 }}>
-                            Explore Library
+                            Library Explorer
                         </LinkButton>
                         <LinkButton href="/sources" variant="outlined" size="large" sx={{ borderRadius: 50, px: 4 }}>
                             Manage Sources
                         </LinkButton>
                         <LinkButton href="/studio" variant="outlined" size="large" sx={{ borderRadius: 50, px: 4 }}>
-                            Open Studio
+                            Authoring Studio
                         </LinkButton>
                     </Box>
                 </Box>
@@ -154,8 +154,8 @@ export default function Home() {
                                 </Avatar>
                                 <Typography variant="h5" gutterBottom>2. Explore</Typography>
                                 <Typography variant="body1" color="text.secondary" paragraph>
-                                    Browse the **Discovery Portal** to find existing modules, or link
-                                    external GitHub repositories to expand your local library.
+                                    Browse the **Library Explorer** to find existing modules, or link
+                                    external GitHub repositories to expand your federated library.
                                 </Typography>
                             </Box>
                         </Grid>
@@ -180,6 +180,53 @@ export default function Home() {
                             View Agent Integration Guide
                         </LinkButton>
                     </Box>
+                </Box>
+
+                {/* Federated Library Section */}
+                <Box sx={{ mb: 12, p: 6, borderRadius: 4, bgcolor: 'primary.dark', color: 'primary.contrastText' }}>
+                    <Grid container spacing={4} alignItems="center">
+                        <Grid size={{ xs: 12, md: 7 }}>
+                            <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+                                Connect to the Federated Ecosystem
+                            </Typography>
+                            <Typography variant="body1" sx={{ mb: 4, opacity: 0.9 }}>
+                                Don't rewrite what has already been taught. The Cognitive Library allows you to bootstrap your project by importing specialized repositories from across the community.
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, fontSize: 16 }}>1</Avatar>
+                                    <Typography variant="body1">
+                                        <strong>Find a Source:</strong> Copy the URL of any GitHub repository containing a <code>registry.json</code> file.
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, fontSize: 16 }}>2</Avatar>
+                                    <Typography variant="body1">
+                                        <strong>Link it:</strong> Go to the <Link href="/sources" style={{ color: 'inherit', fontWeight: 'bold' }}>Manage Sources</Link> dashboard and paste the registry URL.
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, fontSize: 16 }}>3</Avatar>
+                                    <Typography variant="body1">
+                                        <strong>Sync & Use:</strong> The library will instantly index all remote entities, making them available for reference and cloning in the Studio.
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 5 }} sx={{ textAlign: 'center' }}>
+                            <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'inherit', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>Community Libraries</Typography>
+                                    <Typography variant="caption" sx={{ display: 'block', mb: 2 }}>Trusted repositories to get you started:</Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        <Chip label="Standard Library (Built-in)" size="small" sx={{ bgcolor: 'primary.main', color: 'white' }} />
+                                        <Chip label="Cybersecurity Pack (Remote)" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                                        <Chip label="DevOps Modules (Remote)" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    </Grid>
                 </Box>
 
                 {/* Core Definitions Section (Modified for consistency) */}

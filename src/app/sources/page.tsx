@@ -153,7 +153,7 @@ export default function SourcesPage() {
 
                 <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
                     <Button variant="outlined" component="a" href="/library">Go to Library</Button>
-                    <Button variant="contained" component="a" href="/studio">Open Studio</Button>
+                    <Button variant="contained" component="a" href="/studio">Authoring Studio</Button>
                 </Box>
             </Container>
         </Box>

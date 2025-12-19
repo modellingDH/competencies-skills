@@ -31,18 +31,24 @@ export default function Home() {
             <AppBar position="sticky">
                 <Container maxWidth="lg">
                     <Toolbar disableGutters>
-                        <Avatar sx={{ bgcolor: 'primary.main', mr: 2, fontWeight: 'bold' }}>S</Avatar>
+                        {/* Logo Placeholder - replaced with Image when valid */}
+                        <Avatar
+                            src="/cognitive_library_logo.webp"
+                            alt="Logo"
+                            sx={{ mr: 2, bgcolor: 'transparent', width: 40, height: 40 }}
+                            imgProps={{ style: { objectFit: 'contain' } }}
+                        >
+                            <Box component="span" sx={{ fontSize: 24, fontWeight: 'bold' }}>C</Box>
+                        </Avatar>
                         <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                             <Typography variant="h6" noWrap component="div" sx={{ color: 'text.primary', lineHeight: 1 }}>
-                                Schema<Box component="span" sx={{ fontWeight: 'bold' }}>.org</Box>
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>
-                                AI Extension
+                                The Cognitive Library<Box component="span" sx={{ fontWeight: 'bold', color: 'primary.main', ml: 0.5 }}>for AI</Box>
                             </Typography>
                         </Box>
                         <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
                             <LinkButton href="/library" color="inherit" sx={{ color: 'text.secondary' }}>Library Explorer</LinkButton>
                             <LinkButton href="/studio" color="inherit" sx={{ color: 'text.secondary' }}>Authoring Studio</LinkButton>
+                            <LinkButton href="https://schema.org" target="_blank" color="inherit" sx={{ color: 'text.secondary' }}>Schemas</LinkButton>
                             <LinkButton href="https://github.com/modellingDH/competencies-skills" color="inherit" sx={{ color: 'text.secondary' }}>GitHub</LinkButton>
                         </Box>
                     </Toolbar>
@@ -71,13 +77,31 @@ export default function Home() {
                     </Box>
                 </Box>
 
+                {/* Rationale Section */}
+                <Box sx={{ mb: 12, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', gap: 6 }}>
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h4" component="h2" gutterBottom>
+                            Cognitive Coding for GenAI
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" paragraph fontSize={18}>
+                            Generative AI models are powerful <strong>engines</strong> capable of manipulating representations of the world. However, the software that drives them isn't code—it's interpretation strategies.
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" paragraph fontSize={18}>
+                            This project builds a library of reusable <strong>Cognitive Building Blocks</strong> (Competencies, Skills, Concepts, and Tools) to facilitate this new form of programming. Instead of writing prompts from scratch, you assemble verified cognitive modules.
+                        </Typography>
+                    </Box>
+                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300, bgcolor: 'primary.light', borderRadius: 4, opacity: 0.1 }}>
+                        <AccountTreeIcon sx={{ fontSize: 160, color: 'primary.main' }} />
+                    </Box>
+                </Box>
+
                 {/* Features Cards */}
                 <Grid container spacing={4} mb={12}>
                     <Grid size={{ xs: 12, md: 4 }}>
                         <Card sx={{ height: '100%', bgcolor: 'background.paper', borderRadius: 4 }} variant="outlined">
                             <CardContent sx={{ p: 4 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                    <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', mr: 2 }}>
+                                    <Avatar sx={{ bgcolor: 'primary.main', color: 'common.white', mr: 2 }}>
                                         <AccountTreeIcon />
                                     </Avatar>
                                     <Typography variant="h5">Hierarchy</Typography>
@@ -92,7 +116,7 @@ export default function Home() {
                         <Card sx={{ height: '100%', bgcolor: 'background.paper', borderRadius: 4 }} variant="outlined">
                             <CardContent sx={{ p: 4 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                    <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', mr: 2 }}>
+                                    <Avatar sx={{ bgcolor: 'primary.main', color: 'common.white', mr: 2 }}>
                                         <PsychologyIcon />
                                     </Avatar>
                                     <Typography variant="h5">Cognition</Typography>
@@ -107,7 +131,7 @@ export default function Home() {
                         <Card sx={{ height: '100%', bgcolor: 'background.paper', borderRadius: 4 }} variant="outlined">
                             <CardContent sx={{ p: 4 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                    <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', mr: 2 }}>
+                                    <Avatar sx={{ bgcolor: 'primary.main', color: 'common.white', mr: 2 }}>
                                         <SecurityIcon />
                                     </Avatar>
                                     <Typography variant="h5">Reliability</Typography>

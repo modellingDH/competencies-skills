@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import Button, { ButtonProps } from '@mui/material/Button';
-import IconButton, { IconButtonProps } from '@mui/material/IconButton';
+import Button, { type ButtonProps } from '@mui/material/Button';
+import IconButton, { type IconButtonProps } from '@mui/material/IconButton';
 import { forwardRef } from 'react';
 
 // LinkButton
-export const LinkButton = forwardRef<HTMLButtonElement, ButtonProps & { href: string }>(
+export const LinkButton = forwardRef<HTMLButtonElement, ButtonProps & { href: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>>(
     function LinkButton({ href, ...props }, ref) {
         return (
             <Button

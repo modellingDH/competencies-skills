@@ -49,7 +49,7 @@ export default function Home() {
                         <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
                             <LinkButton href="/library" color="inherit" sx={{ color: 'text.secondary' }}>Library Explorer</LinkButton>
                             <LinkButton href="/studio" color="inherit" sx={{ color: 'text.secondary' }}>Authoring Studio</LinkButton>
-                            <LinkButton href="https://schema.org" target="_blank" color="inherit" sx={{ color: 'text.secondary' }}>Schemas</LinkButton>
+                            <LinkButton href="https://schema.org" target="_blank" color="inherit" sx={{ color: 'text.secondary' }}>Schema</LinkButton>
                             <LinkButton href="https://github.com/modellingDH/competencies-skills" color="inherit" sx={{ color: 'text.secondary' }}>GitHub</LinkButton>
                         </Box>
                     </Toolbar>
@@ -257,7 +257,7 @@ export default function Home() {
                 {/* Core Definitions Section (Modified for consistency) */}
                 <Box mb={10}>
                     <Typography variant="h4" component="h2" gutterBottom sx={{ textAlign: 'center', mb: 4 }}>
-                        Schema Standards
+                        Cognitive Programming Schema
                     </Typography>
                     <TableContainer component={Paper} elevation={1} sx={{ borderRadius: 4, border: '1px solid #e0e2e8', overflow: 'hidden' }}>
                         <Table sx={{ minWidth: 650 }} aria-label="simple table">

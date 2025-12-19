@@ -28,57 +28,60 @@ Detailed research and implementation plans can be found in the `docs/` directory
 
 ## 🚀 Project Status
 
-### Phase 1: Research & Definition (✅ Completed)
-- [x] Defined "Skill" vs "Competency" Distinction
-- [x] Researched "Cognitive Markdown" for Workflows
-- [x] Defined "Library Strategy" & Ontology Alignment
-- [x] **[NEW] Integrated Anthropic's "Agent Skills" Best Practices**
+### Phases 1-4 (✅ Completed)
+- [x] Defined Schemas & Cognitive Markdown
+- [x] MD-to-JSON-LD Interpreter & Semantic Validator
+- [x] Discovery Portal & Authoring Studio
+- [x] Local Storage & ZIP Export/Import
 
-### Phase 2: Schema Implementation (✅ Completed)
-- [x] **Tool Schema** (Atomic Capabilities)
-- [x] **Skill Schema** (Zod + Cognitive Parser)
-- [x] **Competency Schema** (Orchestration)
-- [x] **Library Schema** (Frameworks & DefinedTerms)
+### Phase 5: Remote Integration & Library Scaling (✅ Completed)
+- [x] **Virtualized Library Explorer** (`/library`): Support for large datasets with `react-virtuoso` and fuzzy search.
+- [x] **Remote Repository Support**: Connect external GitHub repositories as library sources.
+- [x] **Clone to Project**: Convert remote entities into local, editable copies with one click.
 
-### Phase 3: Semantic Engine (✅ Completed)
-- [x] **MD-to-JSON-LD Interpreter**: Compiles Markdown to Schema.org standards.
-- [x] **Semantic Validator**: SHACL-based validation for logical consistency.
+### Phase 6: Centralized Source Management (✅ Completed)
+- [x] **Management Interface** (`/sources`): Dedicated dashboard to add, remove, and toggle repository sources.
+- [x] **Metadata Enrichment**: Track and display entity origins (Source Repo name/URL) across the UI.
+- [x] **Global Sync**: One-click synchronization for all connected and enabled sources.
 
-### Phase 4: Interface Implementation (✅ Completed)
-- [x] **Material UI Migration**: Complete redesign mimicking Schema.org's aesthetic.
-- [x] **Discovery Portal** (`/search`): Read-only explorer for agents and humans.
-- [x] **Authoring Studio** (`/studio`): Authenticated Editor with real-time validation.
-- [x] **GitHub Integration**: Direct commit/push workflow for managing skills.
+### Phase 7: AI-Assisted Authoring (🏗️ Next Steps)
+- [ ] **AI-Native Suggestions**: Advanced agent-specific feedback using remote context.
+- [ ] **Guideline Documentation**: Standards for publishing and sharing skill repositories.
 
 ## 🌟 Features & Walkthrough
 
-### 1. The Core Semantic Engine
-At the heart of the library is the **Interpreter** (`src/interpreter/`), which acts as a bridge between human instruction and machine understanding.
-*   **Input**: "Cognitive Markdown" (structured lists with `> ACTION`, `? DECISION`).
-*   **Process**: Parses text, checks for ambiguity, and validates against SHACL shapes.
-*   **Output**: Schema.org-compliant `JSON-LD` (HowTo schema) ready for agent ingestion.
+### 1. The Library Explorer
+A high-performance interface for discovering and importing skills.
+*   **Route**: `/library`
+*   **Virtualized Grid**: Seamlessly browse thousands of entities.
+*   **Multi-Source**: Combines local examples with remote repositories.
+*   **Clone to Project**: Instantly import remote skills into your local workspace for customization.
 
-### 2. The Discovery Portal
-A public interface to explore the library.
-*   **Route**: `/search`
-*   **Function**: Indexes local `.md` files and presents them as structured Skill Cards.
-
-### 3. The Authoring Studio
+### 2. The Authoring Studio
 A powerful workbench for "Teaching AI".
 *   **Route**: `/studio`
 *   **Split-Pane Editor**: Write Markdown on the left, see validated JSON-LD on the right.
-*   **Real-time Feedback**: The interpreter runs constantly, flagging logical gaps or missing context.
-*   **Direct Sync**: Changes are committed directly to the GitHub repository using your credentials.
+*   **Toolbox Search**: Search and reference all entities (Local & Remote) directly from the sidebar.
+*   **AI Validator**: Client-side AI suggestions for fixing validation errors.
+*   **Project Packaging**: Export your work as a standardized ZIP for redistribution.
+
+### 3. Centralized Source Management
+Control your library ecosystem.
+*   **Route**: `/sources`
+*   **Multiple Repos**: Support for connecting multiple GitHub repositories.
+*   **Feature Toggles**: Enable or disable specific sources to curating your working environment.
+*   **Verification**: Automatic detection of `registry.json` and repository metadata.
 
 ## 🛠️ Repository Structure
 
 *   `docs/`: Research and planning documentation.
-*   `src/data/frameworks/`: High-level domains (e.g., Software Engineering).
-*   `src/data/competencies/`: Groupings of skills.
-*   `src/data/skills/`: Atomic Instructional Modules.
-*   `src/data/tools/`: Atomic Capability definitions.
-*   `src/schemas/`: TypeScript/Zod definitions for the library.
+*   `public/examples/`: Local standard library entities.
+*   `src/app/library/`: Library Explorer and entity detail views.
+*   `src/app/sources/`: Repository management interface.
+*   `src/components/Studio/`: Core authoring workbench and toolbox components.
+*   `src/lib/`: Logic for AI validation, remote fetching, and file processing.
+*   `src/services/`: Project state and data management.
 
 ## 🤝 Contributing
 
-This library follows the [schema.org](https://schema.org) standard for `DefinedTerm` and aligns with the [ESCO](https://esco.ec.europa.eu) ontology.
+This library follows the [schema.org](https://schema.org) standard and aligns with the [ESCO](https://esco.ec.europa.eu) ontology. To publish your own skills for others to use, simply host a repository with a `registry.json` file in the root.

@@ -16,6 +16,7 @@ import { CopyButton } from './CopyButton';
 
 interface PageProps {
     params: Promise<{ type: string; id: string }>;
+    searchParams: Promise<{ source?: string; rawUrl?: string; sourceRepoName?: string }>;
 }
 
 // Generate static params for all example entities
@@ -57,9 +58,10 @@ function generateURI(type: string, id: string): string {
     return `https://modellingdh.github.io/competencies-skills/entities/${type}/${id}`;
 }
 
-export default async function EntityDetailPage({ params }: PageProps) {
+export default async function EntityDetailPage({ params, searchParams }: PageProps) {
     const { type, id } = await params;
-    const content = await loadEntityContent(type, id);
+    const { source, rawUrl, sourceRepoName } = await searchParams;
+    const content = await loadEntityContent(type, id, source, rawUrl);
 
     if (!content) {
         notFound();
@@ -67,6 +69,7 @@ export default async function EntityDetailPage({ params }: PageProps) {
 
     const uri = generateURI(type, id);
     const entityName = id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const isRemote = source === 'remote';
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
@@ -77,7 +80,9 @@ export default async function EntityDetailPage({ params }: PageProps) {
                         <ArrowBackIcon />
                     </LinkIconButton>
                     <Box>
-                        <Typography variant="h4">{entityName}</Typography>
+                        <Typography variant="h4">
+                            {entityName} {isRemote && <Chip label={sourceRepoName || 'Remote'} size="small" variant="outlined" color="info" sx={{ ml: 1 }} />}
+                        </Typography>
                         <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                             <Chip label={type} size="small" color="primary" sx={{ textTransform: 'capitalize' }} />
                         </Box>
@@ -101,7 +106,15 @@ export default async function EntityDetailPage({ params }: PageProps) {
                     >
                         {uri}
                     </Typography>
-                    <CopyButton uri={uri} content={content} id={id} />
+                    <CopyButton
+                        uri={uri}
+                        content={content}
+                        id={id}
+                        type={type as any}
+                        rawUrl={rawUrl || undefined}
+                        sourceRepoName={sourceRepoName || undefined}
+                        sourceRepoUrl={undefined} // We don't have this in searchParams yet, but it's optional
+                    />
                 </Paper>
 
                 {/* Content */}

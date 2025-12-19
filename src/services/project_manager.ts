@@ -2,13 +2,19 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 // Type definitions for our in-memory project state
+export interface RemoteRepo {
+    url: string;
+    name: string;
+    enabled: boolean;
+}
+
 export interface ProjectState {
     name: string;
     competencies: Record<string, string>; // ID -> Markdown Content
     skills: Record<string, string>;       // ID -> Markdown Content
     tools: Record<string, string>;        // ID -> Markdown Content
     concepts: Record<string, string>;     // ID -> Markdown Content
-    remoteRepositories: string[];         // List of GitHub repository URLs
+    remoteRepositories: RemoteRepo[];     // List of remote repository objects
 }
 
 export const INITIAL_PROJECT_STATE: ProjectState = {

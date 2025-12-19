@@ -49,10 +49,10 @@ export function EntityNavigation({
 
     const allIndexableEntities = useMemo(() => {
         const projectEntities = [
-            ...Object.keys(project.competencies).map(id => ({ id, type: 'competency', source: 'project' })),
-            ...Object.keys(project.concepts).map(id => ({ id, type: 'concept', source: 'project' })),
-            ...Object.keys(project.skills).map(id => ({ id, type: 'skill', source: 'project' })),
-            ...Object.keys(project.tools).map(id => ({ id, type: 'tool', source: 'project' })),
+            ...Object.keys(project.competencies).map(id => ({ id, type: 'competency', source: 'project', sourceRepoName: 'Local Project' })),
+            ...Object.keys(project.concepts).map(id => ({ id, type: 'concept', source: 'project', sourceRepoName: 'Local Project' })),
+            ...Object.keys(project.skills).map(id => ({ id, type: 'skill', source: 'project', sourceRepoName: 'Local Project' })),
+            ...Object.keys(project.tools).map(id => ({ id, type: 'tool', source: 'project', sourceRepoName: 'Local Project' })),
         ];
 
         const remote = remoteEntities.map(e => ({ ...e, source: 'remote' }));
@@ -61,7 +61,7 @@ export function EntityNavigation({
     }, [project, remoteEntities]);
 
     const fuse = useMemo(() => new Fuse(allIndexableEntities, {
-        keys: ['id', 'name', 'type', 'description'],
+        keys: ['id', 'name', 'type', 'description', 'sourceRepoName'],
         threshold: 0.3
     }), [allIndexableEntities]);
 
@@ -193,7 +193,7 @@ export function EntityNavigation({
                                         </ListItemIcon>
                                         <ListItemText
                                             primary={entity.id}
-                                            secondary={`${entity.type} • ${entity.source}`}
+                                            secondary={`${entity.type} • ${entity.sourceRepoName}`}
                                             primaryTypographyProps={{ variant: 'body2', fontWeight: 'bold', fontFamily: 'monospace' }}
                                             secondaryTypographyProps={{ variant: 'caption' }}
                                         />

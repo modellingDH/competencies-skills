@@ -62,6 +62,9 @@ export default function Home() {
                         <LinkButton href="/library" variant="contained" size="large" sx={{ borderRadius: 50, px: 4 }}>
                             Explore Library
                         </LinkButton>
+                        <LinkButton href="/sources" variant="outlined" size="large" sx={{ borderRadius: 50, px: 4 }}>
+                            Manage Sources
+                        </LinkButton>
                         <LinkButton href="/studio" variant="outlined" size="large" sx={{ borderRadius: 50, px: 4 }}>
                             Open Studio
                         </LinkButton>

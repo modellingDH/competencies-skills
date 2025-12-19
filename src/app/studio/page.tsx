@@ -22,6 +22,8 @@ import { ValidationStep } from '@/components/Studio/Wizard/ValidationStep';
 import { ProjectManager } from '@/services/project_manager';
 import { LinkIconButton } from '@/components/LinkComponents';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PublicIcon from '@mui/icons-material/Public';
+import Link from 'next/link';
 
 const steps = ['Instructions', 'Authoring Studio', 'Validation'];
 
@@ -93,6 +95,17 @@ function StudioContent() {
                         <Typography variant="h6" sx={{ flexGrow: 1 }}>
                             Authoring Studio
                         </Typography>
+
+                        <Button
+                            variant="outlined"
+                            color="inherit"
+                            startIcon={<PublicIcon />}
+                            component={Link}
+                            href="/sources"
+                            sx={{ mr: 2 }}
+                        >
+                            Manage Sources
+                        </Button>
 
                         <Button
                             component="label"

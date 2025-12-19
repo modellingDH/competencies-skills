@@ -6,6 +6,8 @@ export interface RemoteEntity {
     tags: string[];
     repositoryUrl: string;
     rawUrl: string;
+    sourceRepoName: string;
+    sourceRepoUrl: string;
 }
 
 export interface RemoteRegistry {
@@ -39,7 +41,9 @@ export class RemoteRepositoryService {
                 ...e,
                 type: e.type as any,
                 repositoryUrl: repoUrl,
-                rawUrl: `${rawBase}/${e.path}`
+                rawUrl: `${rawBase}/${e.path}`,
+                sourceRepoName: registry.name,
+                sourceRepoUrl: repoUrl
             }));
         } catch (error) {
             console.error('Error fetching remote registry:', error);

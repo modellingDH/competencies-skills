@@ -113,3 +113,45 @@ Implement the core logic *before* the UI.
     *   Unzip export.
     *   Verify folder structure matches `src/data/` convention.
     *   Check that JSON-LD files are valid.
+
+## Phase 5: Library Scaling & Remote Integration (✅ Completed)
+Scale the project to handle a federated ecosystem where authors can reference and clone entities from trusted remote sources.
+
+- **Virtualized Library Explorer** (`/library`):
+  - Integrated `react-virtuoso` for sub-millisecond rendering of thousands of cards.
+  - Implemented client-side fuzzy search with `fuse.js`.
+- **Remote Repository Synchronization**:
+  - Developed `RemoteRepositoryService` to fetch and cache `registry.json` from GitHub.
+  - Unified the registry to merge local examples, project data, and external sources.
+- **Cloning & Importing**:
+  - Added "Clone to Project" functionality to convert read-only remote entities into editable local versions.
+  - Metadata tracking for entity origins (Source Repo name/URL).
+
+## Phase 6: Centralized Source Management (✅ Completed)
+Establish a dedicated control plane for managing the library ecosystem.
+
+- **Sources Dashboard** (`/sources`):
+  - Implementation of a dedicated management interface for library sources.
+  - Source toggling: Enable/disable specific repositories to filter the global environment.
+- **Improved Workspace Visibility**:
+  - Source flagging on all entity cards in Library and Studio sidebar.
+  - Management links integrated into Homepage, Library, and Studio headers.
+- **Data Model Evolution**:
+  - Refactored `ProjectState` to persist repository metadata and toggle states in the exported ZIP.
+
+## Phase 7: AI-Assisted Authoring & Ecosystem Guidelines (🏗️ Next Steps)
+- **Advanced AI Validation**: Move beyond simple suggestions to deep contextual analysis using remote references.
+- **Publishing Standards**: Create documentation for creating "Library-ready" repositories.
+- **Multi-tenant Projects**: Potential for collaborating on shared remote repositories directly from the Studio.
+
+## Verification Plan (Updated)
+
+### Automated Tests
+- [x] **Virtualization Benchmark**: Verified smooth scrolling with 1,000+ entities.
+- [x] **Remote manifest fetching**: Verified GitHub API integration for registry discovery.
+- [x] **Type Safety**: Passed `npm run lint` with new multi-repo data structures.
+
+### Manual Verification
+- [x] Added external GitHub repos and verified entity discovery.
+- [x] Verified "Clone to Project" copies content faithfully to local state.
+- [x] Verified toggle state persists between app reloads and ZIP exports.

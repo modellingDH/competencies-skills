@@ -74,19 +74,18 @@ const CardWrapper = styled('div')(({ theme }) => ({
 }));
 
 export default function LibraryPage() {
-    const { project, updateProject, remoteEntities, isSyncing, syncRemoteRepos } = useWizard();
+    const { project, remoteEntities, isSyncing, syncRemoteRepos } = useWizard();
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState<string | null>(null);
-    const [newRepoUrl, setNewRepoUrl] = useState('');
 
     const allEntities = useMemo(() => {
-        const local = EXAMPLE_ENTITIES.map(e => ({ ...e, source: 'local' as const }));
+        const local = EXAMPLE_ENTITIES.map(e => ({ ...e, source: 'local' as const, sourceRepoName: 'Standard Library' }));
         const remote = remoteEntities.map(e => ({ ...e, source: 'remote' as const }));
         return [...local, ...remote];
     }, [remoteEntities]);
 
     const fuse = useMemo(() => new Fuse(allEntities, {
-        keys: ['name', 'description', 'tags'],
+        keys: ['name', 'description', 'tags', 'sourceRepoName'],
         threshold: 0.3,
         distance: 100,
     }), [allEntities]);
@@ -114,22 +113,6 @@ export default function LibraryPage() {
         };
     }, [allEntities]);
 
-    const handleAddRepo = () => {
-        if (!newRepoUrl) return;
-        updateProject(prev => ({
-            ...prev,
-            remoteRepositories: [...prev.remoteRepositories, newRepoUrl]
-        }));
-        setNewRepoUrl('');
-    };
-
-    const handleRemoveRepo = (url: string) => {
-        updateProject(prev => ({
-            ...prev,
-            remoteRepositories: prev.remoteRepositories.filter(r => r !== url)
-        }));
-    };
-
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
             <Container maxWidth="lg">
@@ -138,7 +121,7 @@ export default function LibraryPage() {
                     <LinkIconButton href="/" aria-label="back to home">
                         <ArrowBackIcon />
                     </LinkIconButton>
-                    <Box>
+                    <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="h3" gutterBottom>
                             Library Explorer
                         </Typography>
@@ -146,43 +129,34 @@ export default function LibraryPage() {
                             Browse and explore pre-built competencies, concepts, skills, and tools for AI agents
                         </Typography>
                     </Box>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        component={Link}
+                        href="/sources"
+                        sx={{ mt: 1 }}
+                    >
+                        Manage Sources
+                    </Button>
                 </Box>
 
                 {/* Search and Filter */}
                 <Box sx={{ mb: 4 }}>
                     <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, md: 8 }}>
+                        <Grid size={{ xs: 12 }}>
                             <TextField
                                 fullWidth
-                                placeholder="Search by name, description, or tags..."
+                                placeholder="Search by name, description, tags, or source..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 InputProps={{
-                                    startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <SearchIcon color="action" />
+                                        </InputAdornment>
+                                    )
                                 }}
                             />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    placeholder="Add GitHub Repository URL..."
-                                    value={newRepoUrl}
-                                    onChange={(e) => setNewRepoUrl(e.target.value)}
-                                    InputProps={{
-                                        startAdornment: <PublicIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
-                                    }}
-                                />
-                                <Button
-                                    variant="contained"
-                                    onClick={handleAddRepo}
-                                    disabled={isSyncing}
-                                    sx={{ minWidth: 100 }}
-                                >
-                                    {isSyncing ? <CircularProgress size={20} /> : 'Add'}
-                                </Button>
-                            </Box>
                         </Grid>
                     </Grid>
 
@@ -216,23 +190,14 @@ export default function LibraryPage() {
                             </Button>
                         )}
 
-                        {project.remoteRepositories.length > 0 && (
-                            <Box sx={{ ml: 'auto', display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                {project.remoteRepositories.map(url => (
-                                    <Chip
-                                        key={url}
-                                        label={url.split('/').pop()}
-                                        onDelete={() => handleRemoveRepo(url)}
-                                        size="small"
-                                        variant="outlined"
-                                        icon={<PublicIcon />}
-                                    />
-                                ))}
-                                <IconButton size="small" onClick={() => syncRemoteRepos()} disabled={isSyncing}>
-                                    <SyncIcon fontSize="small" className={isSyncing ? 'rotating' : ''} />
-                                </IconButton>
-                            </Box>
-                        )}
+                        <Box sx={{ ml: 'auto', display: 'flex', gap: 1, alignItems: 'center' }}>
+                            <Typography variant="caption" color="text.secondary">
+                                {project.remoteRepositories.length} Sources Connected
+                            </Typography>
+                            <IconButton size="small" onClick={() => syncRemoteRepos()} disabled={isSyncing}>
+                                <SyncIcon fontSize="small" className={isSyncing ? 'rotating' : ''} />
+                            </IconButton>
+                        </Box>
                     </Box>
                 </Box>
 
@@ -266,18 +231,12 @@ export default function LibraryPage() {
                                 }}
                             >
                                 <CardContent sx={{ flexGrow: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1, flexWrap: 'wrap' }}>
                                         {TYPE_ICONS[entity.type as keyof typeof TYPE_ICONS]}
+                                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }}>
+                                            {entity.sourceRepoName}
+                                        </Typography>
                                         <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-                                            {entity.source === 'remote' && (
-                                                <Chip
-                                                    label="Remote"
-                                                    size="small"
-                                                    variant="outlined"
-                                                    color="info"
-                                                    icon={<PublicIcon sx={{ fontSize: '12px !important' }} />}
-                                                />
-                                            )}
                                             <Chip
                                                 label={entity.type}
                                                 size="small"
@@ -318,7 +277,7 @@ export default function LibraryPage() {
                                 <CardActions>
                                     <Button
                                         component={Link}
-                                        href={`/library/${entity.type}/${entity.id}${entity.source === 'remote' ? `?source=remote&rawUrl=${encodeURIComponent((entity as any).rawUrl)}` : ''}`}
+                                        href={`/library/${entity.type}/${entity.id}${entity.source === 'remote' ? `?source=remote&rawUrl=${encodeURIComponent((entity as any).rawUrl)}&sourceRepoName=${encodeURIComponent((entity as any).sourceRepoName)}` : ''}`}
                                         size="small"
                                         fullWidth
                                         variant="contained"

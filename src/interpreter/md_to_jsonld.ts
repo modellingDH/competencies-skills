@@ -6,7 +6,10 @@ import { z } from 'zod';
 /**
  * Definition of the JSON-LD Output (Schema.org HowTo)
  */
-interface JsonLdStep {
+/**
+ * Definition of the JSON-LD Output (Schema.org HowTo)
+ */
+export interface JsonLdStep {
     "@type": "HowToStep" | "HowToDirection" | "HowToTip";
     name?: string;
     text: string;
@@ -14,7 +17,7 @@ interface JsonLdStep {
     instrument?: { "@id": string }; // Tool Reference
 }
 
-interface JsonLdWorkflow {
+export interface JsonLdWorkflow {
     "@context": "https://schema.org";
     "@type": "HowTo";
     name: string;

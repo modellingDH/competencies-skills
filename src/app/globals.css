@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Material 3-ish Color System */
+  --md-sys-color-primary: 11, 81, 197;
+  /* #0b51c5 - Keeping the existing blue */
+  --md-sys-color-on-primary: 255, 255, 255;
+  --md-sys-color-primary-container: 219, 228, 255;
+  --md-sys-color-on-primary-container: 0, 29, 54;
+
+  --md-sys-color-background: 255, 255, 255;
+  /* #FFFFFF */
+  --md-sys-color-on-background: 26, 28, 30;
+  /* #1a1c1e */
+
+  --md-sys-color-surface: 255, 255, 255;
+  /* #FFFFFF */
+  --md-sys-color-on-surface: 26, 28, 30;
+
+  --md-sys-color-surface-variant: 223, 226, 235;
+  --md-sys-color-on-surface-variant: 67, 71, 78;
+
+  --md-sys-color-outline: 115, 119, 127;
+}
+
+body {
+  color: rgb(var(--md-sys-color-on-background));
+  background-color: #fdfcff;
+}
+
+/* Material Elevation Helpers form */
+.elevation-1 {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+}
+
+.elevation-2 {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+}

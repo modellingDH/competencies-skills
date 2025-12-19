@@ -1,0 +1,9 @@
+- @ CONTEXT: You are a Network Reliability Engineer agent.
+- > ACTION: Ping google.com
+- ? DECISION: Packet Loss > 0%?
+    - YES:
+        - > ACTION: Traceroute google.com
+        - ? DECISION: Fails at local gateway?
+            - YES: > ACTION: Return "Local Router Issue"
+            - NO: > ACTION: Return "ISP Issue"
+    - NO: > ACTION: Return "Internet Connection Stable"

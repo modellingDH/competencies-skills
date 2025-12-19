@@ -69,28 +69,33 @@ Implement the core logic *before* the UI.
 *   **Data Source**: Fetches from raw GitHub content or `MarkdownDB` index.
 
 ### Part B: Authoring Studio ("The Workbench")
-*   **Stack**: React/Next.js + **Auth.js** (GitHub Provider).
-*   **Requirements**:
-    *   User must Authenticate with GitHub.
-    *   User must be a collaborator on `modellingDH/competencies-skills` (or Fork).
+*   **Stack**: React (Client-Side Only) + `JSZip`.
+*   **Strategy**: Local-First, No Authentication.
+*   **Workflow**:
+    1.  **Start**: Create new Project or drag-and-drop existing folder/ZIP.
+    2.  **Edit**: In-memory editing of Competencies, Skills, Tools, and Concepts.
+    3.  **Export**: Generates valid folder structure as a ZIP file.
+    4.  **Publish**: User manually uploads contents to GitHub.
 *   **Features**:
-    *   **Split Editor**: Markdown Input (Left) -> JSON-LD Preview (Right).
-    *   **Real-time Validation**: The `Interpreter` runs on every keystroke to flag gaps.
-    *   **Commit Workflow**: "Save" -> Creates Commit -> Pushes to Branch.
+    *   **Case Study Wizard**: Step-by-step guide to documenting a domain (Competencies -> Skills -> Tools -> Concepts).
+    *   **Embedded Guidelines**: "Authoring Guide" rules appear as context-sensitive help.
+    *   **Project Recovery**: Re-hydrate state from uploaded ZIP/folder.
 
-### Web Application Structure (GitHub-Backed)
-#### [NEW] [src/services/github.js](file:///Users/alessioantonini/Code/competencies-skills/src/services/github.js)
-*   `Octokit` integration to fetch/commit files to the target repository.
-*   Functions: `fetchSkill(id)`, `saveSkill(id, data)`, `listSkills()`.
+### Web Application Structure (Local Studio)
+#### [NEW] [src/services/project_manager.ts](file:///Users/alessioantonini/Code/competencies-skills/src/services/project_manager.ts)
+*   Handles in-memory project state (`{ competencies: [], skills: [], ... }`).
+*   `exportProject()`: Uses `JSZip` to bundle `.md` and generated `.json-ld` files.
+*   `importProject()`: Parses uploaded ZIP/files to restore state.
 
-#### [NEW] [src/components/SkillEditor/](file:///Users/alessioantonini/Code/competencies-skills/src/components/SkillEditor/)
-*   **`PedagogyForm.jsx`**: Metadata editing.
-*   **`ProcedureEditor.jsx`**: Mixed Markdown/Reference editor.
-*   **`CognitiveWorkflowEditor.jsx`**: Text area for "Cognitive Markdown" (Lists with `?`, `>`, `@` keywords).
-    *   Includes a "Preview" pane that renders the list as a simple indented tree.
+#### [NEW] [src/components/Wizard/](file:///Users/alessioantonini/Code/competencies-skills/src/components/Wizard/)
+*   `WizardContainer.tsx`: Manages step progress.
+*   `DomainStep.tsx`: Define high-level Competency/Role.
+*   `SkillDecomposition.tsx`: Break down Role into Skills.
+*   `ToolMap.tsx`: Assign tools to Skills.
+*   `ConceptDefinition.tsx`: Define shared vocabulary.
 
-#### [NEW] [src/components/Library/](file:///Users/alessioantonini/Code/competencies-skills/src/components/Library/)
-*   `ReferenceLinker.jsx`: Component to search and link to Human Docs (`.md` files) in the repo.
+#### [NEW] [src/components/Guidance/](file:///Users/alessioantonini/Code/competencies-skills/src/components/Guidance/)
+*   `GuidanceSidePanel.tsx`: Shows relevant "Do's and Don'ts" based on current step.
 
 ## Verification Plan
 
@@ -98,11 +103,13 @@ Implement the core logic *before* the UI.
 *   **Schema Validation**: Ensure the Markdown parser correctly identifies nodes in the "Cognitive Markdown".
 
 ### Manual Verification
-1.  **GitHub Connection**:
-    *   Configure App with a Repo Token.
-    *   Verify it lists files from your GitHub repo.
-2.  **"Teaching" Flow**:
-    *   Create a Skill "DebugPython".
-    *   Write a Procedure illustrating the thought process.
-    *   Define a Workflow using `? DECISION` and `> ACTION` syntax.
-    *   Save and verify the `.md` file structure in the Repo.
+1.  **Project Workflow**:
+    *   Start "New Case Study".
+    *   Define a Competency and Skill.
+    *   Export ZIP.
+    *   Reload page and Import ZIP.
+    *   Verify state is restored correctly.
+2.  **Output Validation**:
+    *   Unzip export.
+    *   Verify folder structure matches `src/data/` convention.
+    *   Check that JSON-LD files are valid.

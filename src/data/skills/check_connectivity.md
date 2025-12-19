@@ -1,0 +1,5 @@
+- @ CONTEXT: As an AI agent, you need to verify if internet access is available.
+- > ACTION: Ping google.com
+- ? DECISION: Packet loss < 10%?
+    - YES: > ACTION: Return "Online"
+    - NO: > ACTION: Return "Offline"

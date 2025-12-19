@@ -9,7 +9,7 @@ export const ToolSchema = z.object({
   id: z.string().uuid().or(z.string().regex(/^[a-z0-9_]+$/)).describe("Unique identifier for the tool"),
   name: z.string().min(1).describe("Human-readable name of the tool"),
   description: z.string().min(10).describe("Detailed description of what the tool does and when to use it"),
-  
+
   // Alignment with Schema.org SoftwareSourceCode or APIReference
   source: z.object({
     type: z.enum(['local', 'api', 'library']),
@@ -18,8 +18,8 @@ export const ToolSchema = z.object({
   }),
 
   // Parameters defined as a JSON Schema object for flexibility
-  parameters: z.record(z.any()).describe("JSON Schema defining the input parameters"),
-  
+  parameters: z.record(z.string(), z.any()).describe("JSON Schema defining the input parameters"),
+
   // Security/Safety metadata
   safety: z.object({
     isDeterministic: z.boolean().default(true),

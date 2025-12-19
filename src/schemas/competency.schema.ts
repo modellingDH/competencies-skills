@@ -8,16 +8,15 @@ import { DefinedTermSchema } from './library.schema';
  */
 
 // Behavior Tree Nodes
-const BehaviorNodeSchema = z.lazy(() => z.object({
+export const BehaviorNodeSchema: z.ZodType<any> = z.lazy(() => z.object({
     type: z.enum(['Sequence', 'Selector', 'Parallel', 'Action', 'Condition']),
     name: z.string().optional(),
-
-    // For Composites (Sequence, Selector, Parallel)
+    properties: z.record(z.string(), z.any()).optional(),
     children: z.array(BehaviorNodeSchema).optional(),
 
     // For Actions (Leaf Nodes)
     skill_ref: z.string().optional().describe("ID of the Skill to execute"),
-    parameters: z.record(z.any()).optional().describe("Parameters to pass to the Skill"),
+    parameters: z.record(z.string(), z.any()).optional().describe("Parameters to pass to the Skill"),
 
     // For Conditions
     condition: z.string().optional().describe("Expression to evaluate (e.g. 'battery < 20')"),

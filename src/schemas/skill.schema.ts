@@ -10,7 +10,8 @@ import { DefinedTermSchema } from './library.schema';
 export const InstructionalAndContextSchema = z.object({
     id: z.string().regex(/^[a-z0-9_]+$/),
     name: z.string(),
-    objective: z.string().describe("Learning objective for the agent"),
+    description: z.string().describe("Concise functional description for the Agent Router (selection logic)."),
+    objective: z.string().describe("Pedagogical goal or internal outcome target."),
     version: z.string().default("1.0.0"),
 
     // Dependencies
@@ -46,6 +47,14 @@ export const EvaluationSpecSchema = z.object({
     })).optional(),
 });
 
+// 5. Few-Shot Examples (The "Demonstration")
+export const ExampleSchema = z.object({
+    user_input: z.string().describe("Example user query triggering this skill"),
+    thought_process: z.string().optional().describe("Internal monologue showing how to think"),
+    tool_calls: z.array(z.any()).optional().describe("Expected tool invocations"),
+    final_response: z.string().describe("Ideal final response to the user")
+});
+
 // MAIN SKILL OBJECT
 export const SkillSchema = z.object({
     meta: InstructionalAndContextSchema,
@@ -57,6 +66,8 @@ export const SkillSchema = z.object({
     interpretation: z.object({
         rules: z.array(InterpretationRuleSchema)
     }).optional(),
+
+    examples: z.array(ExampleSchema).optional().describe("Canonical examples for few-shot prompting"),
 
     evals: EvaluationSpecSchema.optional(),
 });

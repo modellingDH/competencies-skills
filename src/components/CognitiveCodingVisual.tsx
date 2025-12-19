@@ -59,44 +59,48 @@ export function CognitiveCodingVisual() {
                     <line x1="200" y1="150" x2={300} y2={200 + float(60)} />
                 </g>
 
+                {/* Cognitive Software Layer Label */}
+                <text x="200" y="30" textAnchor="middle" fontSize="12" fontWeight="bold" fill={muted} fontFamily={theme.typography.fontFamily}>
+                    COGNITIVE SOFTWARE LAYER
+                </text>
+
                 {/* Central "Engine" / Coordinator */}
                 <g transform={`translate(200, 150) scale(${pulse(0)})`}>
-                    <circle r="40" fill={theme.palette.background.default} stroke={primary} strokeWidth="3" filter="url(#glow)" />
-                    <circle r="20" fill={primary} opacity="0.2" />
-                    <circle r="10" fill={primary} />
+                    <circle r="45" fill={primary} stroke={theme.palette.background.paper} strokeWidth="4" filter="url(#glow)" />
+                    <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill="white" fontFamily={theme.typography.fontFamily}>GenAI Engine</text>
                 </g>
 
                 {/* Satellite Nodes (Competencies, Skills, Tools) */}
 
                 {/* Node 1: Skill (Top Left) */}
                 <g transform={`translate(${100}, ${100 + float(0)})`}>
-                    <rect x="-20" y="-15" width="40" height="30" rx="4" fill={theme.palette.background.default} stroke={primary} strokeWidth="2" />
-                    <text x="0" y="5" textAnchor="middle" fontSize="10" fill={theme.palette.text.primary} fontFamily="monospace">Skill</text>
+                    <rect x="-30" y="-20" width="60" height="40" rx="6" fill={primary} />
+                    <text x="0" y="5" textAnchor="middle" fontSize="12" fontWeight="bold" fill="white" fontFamily={theme.typography.fontFamily}>Skill</text>
                 </g>
 
                 {/* Node 2: Competency (Top Right) */}
                 <g transform={`translate(${300}, ${100 + float(20)})`}>
-                    <rect x="-25" y="-15" width="50" height="30" rx="4" fill={theme.palette.background.default} stroke={accent2} strokeWidth="2" />
-                    <text x="0" y="5" textAnchor="middle" fontSize="10" fill={theme.palette.text.primary} fontFamily="monospace">Role</text>
+                    <rect x="-35" y="-20" width="70" height="40" rx="6" fill={accent2} />
+                    <text x="0" y="5" textAnchor="middle" fontSize="12" fontWeight="bold" fill="black" fontFamily={theme.typography.fontFamily}>Role</text>
                 </g>
 
                 {/* Node 3: Tool (Bottom Left) */}
                 <g transform={`translate(${100}, ${200 + float(40)})`}>
-                    <circle r="18" fill={theme.palette.background.default} stroke={accent1} strokeWidth="2" />
-                    <text x="0" y="4" textAnchor="middle" fontSize="10" fill={theme.palette.text.primary} fontFamily="monospace">Tool</text>
+                    <circle r="25" fill={accent1} />
+                    <text x="0" y="5" textAnchor="middle" fontSize="12" fontWeight="bold" fill="white" fontFamily={theme.typography.fontFamily}>Tool</text>
                 </g>
 
                 {/* Node 4: Concept (Bottom Right) */}
                 <g transform={`translate(${300}, ${200 + float(60)})`}>
-                    <path d="M0 -20 L20 15 L-20 15 Z" fill={theme.palette.background.default} stroke={secondary} strokeWidth="2" transform="translate(0,5)" />
-                    <text x="0" y="10" textAnchor="middle" fontSize="10" fill={theme.palette.text.primary} fontFamily="monospace">Term</text>
+                    <path d="M0 -25 L25 18 L-25 18 Z" fill={secondary} transform="translate(0,6)" />
+                    <text x="0" y="10" textAnchor="middle" fontSize="12" fontWeight="bold" fill="white" fontFamily={theme.typography.fontFamily}>Concept</text>
                 </g>
 
                 {/* Data Flow Particles */}
-                <circle r="3" fill={primary}>
+                <circle r="4" fill="white">
                     <animateMotion dur="2s" repeatCount="indefinite" path={`M${100 - 200},${100 + float(0) - 150} L0,0`} />
                 </circle>
-                <circle r="3" fill={accent2}>
+                <circle r="4" fill="white">
                     <animateMotion dur="3s" repeatCount="indefinite" path={`M${300 - 200},${100 + float(20) - 150} L0,0`} />
                 </circle>
 

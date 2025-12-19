@@ -23,6 +23,7 @@ import PsychologyIcon from '@mui/icons-material/Psychology';
 import SecurityIcon from '@mui/icons-material/Security';
 
 import { LinkButton } from '@/components/LinkComponents';
+import { CognitiveCodingVisual } from '@/components/CognitiveCodingVisual';
 
 export default function Home() {
     return (
@@ -90,8 +91,8 @@ export default function Home() {
                             This project builds a library of reusable <strong>Cognitive Building Blocks</strong> (Competencies, Skills, Concepts, and Tools) to facilitate this new form of programming. Instead of writing prompts from scratch, you assemble verified cognitive modules.
                         </Typography>
                     </Box>
-                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300, bgcolor: 'primary.light', borderRadius: 4, opacity: 0.1 }}>
-                        <AccountTreeIcon sx={{ fontSize: 160, color: 'primary.main' }} />
+                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                        <CognitiveCodingVisual />
                     </Box>
                 </Box>
 

@@ -77,6 +77,7 @@ export default function LibraryPage() {
     const { project, remoteEntities, isSyncing, syncRemoteRepos } = useWizard();
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState<string | null>(null);
+    const [sortBy, setSortBy] = useState<'name' | 'type' | 'source'>('name');
 
     const allEntities = useMemo(() => {
         const local = EXAMPLE_ENTITIES.map(e => ({ ...e, source: 'local' as const, sourceRepoName: 'Standard Library' }));
@@ -101,8 +102,14 @@ export default function LibraryPage() {
             results = results.filter(e => e.type === typeFilter);
         }
 
-        return results;
-    }, [searchQuery, typeFilter, allEntities, fuse]);
+        // Apply Sorting
+        return [...results].sort((a, b) => {
+            if (sortBy === 'name') return a.name.localeCompare(b.name);
+            if (sortBy === 'type') return a.type.localeCompare(b.type);
+            if (sortBy === 'source') return a.sourceRepoName.localeCompare(b.sourceRepoName);
+            return 0;
+        });
+    }, [searchQuery, typeFilter, allEntities, fuse, sortBy]);
 
     const stats = useMemo(() => {
         return {
@@ -190,6 +197,20 @@ export default function LibraryPage() {
                             </Button>
                         )}
 
+                        <Box sx={{ borderLeft: 1, borderColor: 'divider', pl: 2, ml: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="caption" color="text.secondary">Sort by:</Typography>
+                            <ToggleButtonGroup
+                                value={sortBy}
+                                exclusive
+                                onChange={(e, newSort) => newSort && setSortBy(newSort)}
+                                size="small"
+                            >
+                                <ToggleButton value="name">Name</ToggleButton>
+                                <ToggleButton value="type">Type</ToggleButton>
+                                <ToggleButton value="source">Source</ToggleButton>
+                            </ToggleButtonGroup>
+                        </Box>
+
                         <Box sx={{ ml: 'auto', display: 'flex', gap: 1, alignItems: 'center' }}>
                             <Typography variant="caption" color="text.secondary">
                                 {project.remoteRepositories.length} Sources Connected
@@ -202,9 +223,14 @@ export default function LibraryPage() {
                 </Box>
 
                 {/* Results */}
-                <Typography variant="h6" gutterBottom>
-                    {filteredEntities.length} {filteredEntities.length === 1 ? 'Entity' : 'Entities'}
-                </Typography>
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <Typography variant="h6">
+                        {filteredEntities.length} {filteredEntities.length === 1 ? 'Entity' : 'Entities'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        Showing results sorted by {sortBy}
+                    </Typography>
+                </Box>
 
                 <VirtuosoGrid
                     style={{ height: '70vh', width: '100%' }}

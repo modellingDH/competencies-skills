@@ -82,6 +82,40 @@ Control your library ecosystem.
 *   `src/lib/`: Logic for AI validation, remote fetching, and file processing.
 *   `src/services/`: Project state and data management.
 
+## 🚀 Deployment
+
+The AI Skills & Competencies library is a standard Next.js application that can be deployed to any modern cloud hosting provider.
+
+### 1. One-Click Deployment (Recommended)
+The easiest way to deploy is using **Vercel** or **Netlify**:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FmodellingDH%2Fcompetencies-skills)
+
+### 2. Manual Build
+If you are hosting on your own infrastructure:
+
+```bash
+# Install dependencies
+npm install
+
+# Build the production application
+npm run build
+
+# Start the production server
+npm run start
+```
+
+### 3. Static Export
+If you want to host on **GitHub Pages**, update `next.config.ts` to use `output: 'export'` and run:
+
+```bash
+npm run build
+```
+The static files will be in the `out/` directory.
+
+> [!NOTE]
+> **GitHub API Limits**: For large-scale use of remote repositories, you may need to provide a `GITHUB_TOKEN` environment variable to increase rate limits, though this is not required for standard usage of the built-in library.
+
 ## 🤝 Contributing
 
 This library follows the [schema.org](https://schema.org) standard and aligns with the [ESCO](https://esco.ec.europa.eu) ontology. To publish your own skills for others to use, simply host a repository with a `registry.json` file in the root.

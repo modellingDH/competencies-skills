@@ -133,6 +133,7 @@ export function ValidationStep() {
             const match = ref.match(/@(skill|concept|tool|competency):(\w+)/);
             if (!match) continue;
             const [, refType, refId] = match;
+            if (!refType || !refId) continue;
 
             // Check Local
             const collection = `${refType}s` as keyof typeof project;

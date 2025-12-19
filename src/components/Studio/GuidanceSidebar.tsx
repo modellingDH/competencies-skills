@@ -17,6 +17,10 @@ interface GuidanceSidebarProps {
 export function GuidanceSidebar({ activeGuidance }: GuidanceSidebarProps) {
     const guidance = WIZARD_GUIDANCE[activeGuidance];
 
+    if (!guidance) {
+        return null;
+    }
+
     return (
         <Paper
             elevation={0}

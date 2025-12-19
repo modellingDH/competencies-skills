@@ -28,7 +28,7 @@ export function UnifiedStudioView() {
         updateProject((prev) => ({
             ...prev,
             [type]: {
-                ...prev[type as keyof typeof prev],
+                ...(prev[type as keyof typeof prev] as Record<string, string>),
                 [id]: `---\nid: ${id}\nname: ${name}\n---\n\n# Content goes here`
             }
         }));
@@ -42,7 +42,7 @@ export function UnifiedStudioView() {
 
         updateProject((prev) => {
             const typeKey = `${type}s` as keyof typeof prev;
-            const updated = { ...prev[typeKey] };
+            const updated = { ...(prev[typeKey] as Record<string, string>) };
             delete updated[id];
             return { ...prev, [typeKey]: updated };
         });

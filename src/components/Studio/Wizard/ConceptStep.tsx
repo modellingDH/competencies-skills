@@ -112,10 +112,11 @@ ${relatedBlock}
     };
 
     const guidance = WIZARD_GUIDANCE.concept;
+    if (!guidance) return null;
 
     return (
         <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
                 <Typography variant="h5" gutterBottom>
                     Define Concepts
                 </Typography>
@@ -278,7 +279,7 @@ ${relatedBlock}
                 </List>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
                 <GuidancePanel
                     title={guidance.title}
                     description={guidance.description}

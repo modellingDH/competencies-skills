@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -15,15 +15,16 @@ import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import Link from 'next/link';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PublicIcon from '@mui/icons-material/Public';
+
 import { WizardProvider, useWizard } from '@/components/Studio/Wizard/WizardContext';
 import { InstructionsStep } from '@/components/Studio/Wizard/InstructionsStep';
 import { UnifiedStudioView } from '@/components/Studio/Wizard/UnifiedStudioView';
 import { ValidationStep } from '@/components/Studio/Wizard/ValidationStep';
 import { ProjectManager } from '@/services/project_manager';
 import { LinkIconButton } from '@/components/LinkComponents';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PublicIcon from '@mui/icons-material/Public';
-import Link from 'next/link';
 
 const steps = ['Instructions', 'Authoring Studio', 'Validation'];
 
@@ -172,5 +173,11 @@ function StudioContent() {
 }
 
 export default function StudioPage() {
-    return <StudioContent />;
+    return (
+        <Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading Studio...</Box>}>
+            <WizardProvider>
+                <StudioContent />
+            </WizardProvider>
+        </Suspense>
+    );
 }

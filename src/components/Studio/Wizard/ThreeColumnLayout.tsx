@@ -1,8 +1,8 @@
 'use client';
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
+
 import { EntitySidebar } from '../EntitySidebar';
 import { GuidanceSidebar } from '../GuidanceSidebar';
 import { WIZARD_GUIDANCE } from './guidance-config';

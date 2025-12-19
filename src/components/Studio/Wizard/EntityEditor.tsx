@@ -86,7 +86,8 @@ export function EntityEditor({ type, id, onOpenGuidance }: EntityEditorProps) {
     const { project, updateProject } = useWizard();
 
     // Get existing content or initialize with template
-    const existingContent = (project[`${type}s` as keyof typeof project][id] as string || '');
+    const collection = project[`${type}s` as keyof typeof project] as Record<string, string>;
+    const existingContent = (collection[id] || '');
 
     const [name, setName] = useState(id.replace(/_/g, ' '));
     const [content, setContent] = useState(existingContent || getDefaultTemplate(type));
@@ -95,7 +96,8 @@ export function EntityEditor({ type, id, onOpenGuidance }: EntityEditorProps) {
 
     // Update content when entity changes
     useEffect(() => {
-        const newContent = (project[`${type}s` as keyof typeof project][id] as string || '');
+        const collection = project[`${type}s` as keyof typeof project] as Record<string, string>;
+        const newContent = (collection[id] || '');
         setContent(newContent || getDefaultTemplate(type));
         setName(id.replace(/_/g, ' '));
         setLastSaved(null); // Reset save status
@@ -135,7 +137,7 @@ ${content}
         updateProject((prev) => ({
             ...prev,
             [`${type}s`]: {
-                ...prev[`${type}s` as keyof typeof prev],
+                ...(prev[`${type}s` as keyof typeof prev] as Record<string, string>),
                 [id]: markdown
             }
         }));

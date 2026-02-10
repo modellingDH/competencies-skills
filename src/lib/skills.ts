@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Interpreter } from '../interpreter/md_to_jsonld';
 
-const skillsDir = path.join(process.cwd(), 'src/data/skills');
+const skillsDir = path.join(process.cwd(), 'library/skills');
 
 export interface SkillEntry {
     id: string;

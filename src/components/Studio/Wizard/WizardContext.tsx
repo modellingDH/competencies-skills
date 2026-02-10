@@ -17,6 +17,15 @@ interface WizardContextType {
     cloneRemoteEntity: (entity: RemoteEntity) => Promise<boolean>;
     toggleRemoteRepo: (url: string) => void;
     removeRemoteRepo: (url: string) => void;
+    workspacePath: string | null;
+    openWorkspace: () => Promise<void>;
+    saveEntityToWorkspace: (type: string, id: string, content: string) => Promise<boolean>;
+    isSettingsOpen: boolean;
+    settingsTab: number;
+    toggleSettings: (open: boolean, tabIndex?: number) => void;
+    driveUser: string | null;
+    githubUser: string | null;
+    refreshAuthStatus: () => Promise<void>;
 }
 
 const WizardContext = createContext<WizardContextType | undefined>(undefined);
@@ -26,8 +35,96 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     const [project, setProject] = useState<ProjectState>(INITIAL_PROJECT_STATE);
     const [remoteEntities, setRemoteEntities] = useState<RemoteEntity[]>([]);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [workspacePath, setWorkspacePath] = useState<string | null>(null);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [settingsTab, setSettingsTab] = useState(0);
+    const [driveUser, setDriveUser] = useState<string | null>(null);
+    const [githubUser, setGithubUser] = useState<string | null>(null);
 
     const remoteService = useMemo(() => new RemoteRepositoryService(), []);
+
+    const refreshAuthStatus = async () => {
+        if (typeof window !== 'undefined' && window.electronAPI) {
+            const drive = await window.electronAPI.getDriveUser?.();
+            setDriveUser(drive || null);
+            const github = await window.electronAPI.getGitHubUser?.();
+            setGithubUser(github || null);
+        }
+    };
+
+    const loadFromDirectory = async (dir: string) => {
+        setWorkspacePath(dir);
+        if (typeof window !== 'undefined' && window.electronAPI) {
+            try {
+                const files = await window.electronAPI.loadWorkspace(dir);
+                setProject(prev => {
+                    const newState = { ...prev };
+                    const mapDirToKey: Record<string, keyof ProjectState> = {
+                        'competencies': 'competencies',
+                        'concepts': 'concepts',
+                        'skills': 'skills',
+                        'tools': 'tools',
+                        'meta-skills': 'metaSkills'
+                    };
+
+                    Object.entries(files).forEach(([dirName, contentMap]) => {
+                        let key = mapDirToKey[dirName];
+                        if (!key && dirName.endsWith('s')) {
+                            // potential fallback
+                        }
+
+                        if (key) {
+                            const current = newState[key];
+                            if (current && typeof current === 'object' && !Array.isArray(current)) {
+                                (newState[key] as Record<string, string>) = { ...current, ...contentMap };
+                            }
+                        }
+                    });
+                    return newState;
+                });
+            } catch (error) {
+                console.error('Failed to load workspace files:', error);
+            }
+        }
+    };
+
+    useEffect(() => {
+        refreshAuthStatus();
+        if (typeof window !== 'undefined' && window.electronAPI?.getWorkspacePath) {
+            window.electronAPI.getWorkspacePath().then((dir) => {
+                if (dir && typeof dir === 'string') {
+                    loadFromDirectory(dir);
+                }
+            });
+        }
+    }, []);
+
+    const openWorkspace = async () => {
+        if (typeof window !== 'undefined' && window.electronAPI) {
+            try {
+                const dir = await window.electronAPI.openDirectory();
+                if (dir) {
+                    await loadFromDirectory(dir);
+                }
+            } catch (error) {
+                console.error('Failed to open workspace:', error);
+            }
+        }
+    };
+
+    const saveEntityToWorkspace = async (type: string, id: string, content: string) => {
+        if (typeof window !== 'undefined' && window.electronAPI && workspacePath) {
+            try {
+                // Ensure proper folder mapping? 
+                // type 'skill' -> 'skills' usually.
+                return await window.electronAPI.saveFile({ dirPath: workspacePath, type, id, content });
+            } catch (error) {
+                console.error('Failed to save entity:', error);
+                return false;
+            }
+        }
+        return false;
+    };
 
     const syncRemoteRepos = async () => {
         const enabledRepos = project.remoteRepositories.filter(r => r.enabled);
@@ -59,7 +156,11 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
     // Helper for functional updates to deep state
     const updateProject = (updater: (prev: ProjectState) => ProjectState) => {
-        setProject((prev) => updater(prev));
+        setProject((prev) => {
+            const next = updater(prev);
+            // TODO: Auto-save logic if needed?
+            return next;
+        });
     };
 
     const toggleRemoteRepo = (url: string) => {
@@ -92,6 +193,18 @@ export function WizardProvider({ children }: { children: ReactNode }) {
             syncRemoteRepos,
             toggleRemoteRepo,
             removeRemoteRepo,
+            workspacePath,
+            openWorkspace,
+            saveEntityToWorkspace,
+            isSettingsOpen,
+            settingsTab,
+            toggleSettings: (open: boolean, tabIndex?: number) => {
+                setIsSettingsOpen(open);
+                if (tabIndex !== undefined) setSettingsTab(tabIndex);
+            },
+            driveUser,
+            githubUser,
+            refreshAuthStatus,
             cloneRemoteEntity: async (entity) => {
                 try {
                     const content = await remoteService.fetchEntityContent(entity.rawUrl);

@@ -7,8 +7,13 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import CircularProgress from '@mui/material/CircularProgress';
 import { CognitiveMarkdownEditor } from './CognitiveMarkdownEditor';
+import Link from 'next/link';
 import { useWizard } from './WizardContext';
+import { useAI } from '@/contexts/AIContext';
 
 interface EntityEditorProps {
     type: 'competency' | 'concept' | 'skill' | 'tool';
@@ -83,7 +88,8 @@ What does this tool do?
 }
 
 export function EntityEditor({ type, id, onOpenGuidance }: EntityEditorProps) {
-    const { project, updateProject } = useWizard();
+    const { project, updateProject, githubUser } = useWizard();
+    const { generate, isModelReady } = useAI();
 
     // Get existing content or initialize with template
     const collection = project[`${type}s` as keyof typeof project] as Record<string, string>;
@@ -92,14 +98,71 @@ export function EntityEditor({ type, id, onOpenGuidance }: EntityEditorProps) {
     const [name, setName] = useState(id.replace(/_/g, ' '));
     const [content, setContent] = useState(existingContent || getDefaultTemplate(type));
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleAiGenerate = async () => {
+        if (!name) return;
+        setIsGenerating(true);
+        try {
+            const systemPrompt = "You are an expert AI agent architect. You output structured markdown.";
+            let userPrompt = "";
+
+            switch (type) {
+                case 'competency':
+                    userPrompt = `Create a Competency definition for a role named "${name}". Use sections ## ROLE, ## OBJECTIVE, ## GUARDRAILS, ## Required Skills.`;
+                    break;
+                case 'concept':
+                    userPrompt = `Define the technical concept "${name}". Use sections ## Definition, ## Alignment, ## Related Concepts.`;
+                    break;
+                case 'skill':
+                    userPrompt = `Create a Cognitive Skill for "${name}". Use sections ## Description, # Cognitive Workflow (with @ CONTEXT, > ACTION, ? DECISION markers), ## Required Tools.`;
+                    break;
+                case 'tool':
+                    userPrompt = `Describe a tool named "${name}". Use sections ## Description, ## Parameters (Input/Output), ## Side Effects.`;
+                    break;
+            }
+
+            const result = await generate(userPrompt, systemPrompt);
+            if (result) {
+                setContent(result);
+            }
+        } catch (e) {
+            console.error("Generation failed:", e);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     // Update content when entity changes
     useEffect(() => {
         const collection = project[`${type}s` as keyof typeof project] as Record<string, string>;
-        const newContent = (collection[id] || '');
-        setContent(newContent || getDefaultTemplate(type));
-        setName(id.replace(/_/g, ' '));
+        const fullContent = (collection[id] || '');
+
+        // Regex to match frontmatter (yaml block at start)
+        const frontmatterRegex = /^---\n([\s\S]*?)\n---\n+/;
+        const match = fullContent.match(frontmatterRegex);
+
+        let initialBody = fullContent;
+        let initialName = id.replace(/_/g, ' ');
+
+        if (match) {
+            // Strip frontmatter
+            initialBody = fullContent.slice(match[0].length);
+
+            // Try to extract name from frontmatter
+            const nameMatch = (match[1] || '').match(/^name:\s*(.*)$/m);
+            if (nameMatch) {
+                initialName = (nameMatch[1] || '').trim();
+            }
+        } else if (!fullContent) {
+            // New/Empty entity - load template
+            initialBody = getDefaultTemplate(type);
+        }
+
+        setContent(initialBody);
+        setName(initialName);
         setLastSaved(null); // Reset save status
     }, [type, id, project]);
 
@@ -124,6 +187,75 @@ export function EntityEditor({ type, id, onOpenGuidance }: EntityEditorProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [name, content]); // Re-run when name or content changes
 
+
+    const handlePublish = async () => {
+        if (!githubUser || !window.electronAPI) return;
+
+        if (!confirm("About to publish/update this skill on GitHub Gist.\n\nThis action cannot be undone (history is preserved on GitHub).\n\nDo you want to proceed?")) return;
+
+        setIsPublishing(true);
+        try {
+            // Parse frontmatter for gist_id
+            const frontmatterRegex = /^---\n([\s\S]*?)\n---\n+/;
+            const match = content.match(frontmatterRegex);
+            let gistId = null;
+
+            if (match) {
+                const idMatch = match[1].match(/^gist_id:\s*(.*)$/m);
+                if (idMatch) gistId = idMatch[1].trim();
+            }
+
+            let newUrl: string | null = null;
+            const description = `Cognitive Library: ${type} - ${name}`;
+
+            if (gistId) {
+                newUrl = await window.electronAPI.updateGitHubGist({
+                    gistId,
+                    name,
+                    content,
+                    description
+                });
+            } else {
+                newUrl = await window.electronAPI.createGitHubGist({
+                    name,
+                    content,
+                    description
+                });
+            }
+
+            if (newUrl) {
+                const newId = newUrl.split('/').pop();
+                // Check if newId is different (should allow setting it initially)
+                if (newId) {
+                    let newContent = content;
+                    if (match) {
+                        // If it has frontmatter
+                        if (!gistId) {
+                            // Append if new
+                            newContent = content.replace(/^---\n([\s\S]*?)\n---/, (m, p1) => {
+                                return `---\n${p1.trim()}\ngist_id: ${newId}\ngist_url: ${newUrl}\n---`;
+                            });
+                        } else {
+                            // Already has ID, assuming it's the same. Update URL just in case?
+                            // Skip modifying content if ID matches.
+                        }
+                    } else {
+                        newContent = `---\nid: ${id}\nname: ${name}\ngist_id: ${newId}\ngist_url: ${newUrl}\n---\n\n${content}`;
+                    }
+                    if (newContent !== content) setContent(newContent);
+                }
+                alert(`Successfully published to Gist: ${newUrl}`);
+            } else {
+                alert('Failed to publish. Please check your GitHub connection.');
+            }
+
+        } catch (error) {
+            console.error('Publishing failed:', error);
+            alert('Publishing exception occurred.');
+        } finally {
+            setIsPublishing(false);
+        }
+    };
 
     const handleSave = () => {
         const markdown = `---
@@ -183,72 +315,115 @@ ${content}
     const config = getEditorConfig();
 
     return (
-        <Box sx={{ height: '100%', overflow: 'auto', p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-                {config.title}: {id}
-            </Typography>
-
-            <TextField
-                label="Display Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                fullWidth
-                margin="normal"
-                required
-            />
-
-            <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
-                Content
-            </Typography>
-            {config.hint && (
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-                    💡 {config.hint}
-                    {onOpenGuidance && (
-                        <>
-                            ,{' '}
-                            <Typography
-                                component="span"
-                                variant="caption"
-                                sx={{
-                                    color: 'primary.main',
-                                    cursor: 'pointer',
-                                    textDecoration: 'underline',
-                                    '&:hover': { color: 'primary.dark' }
-                                }}
-                                onClick={onOpenGuidance}
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            {/* Header Area */}
+            <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 'bold' }}>
+                        {config.title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {githubUser && (
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="secondary"
+                                startIcon={isPublishing ? <CircularProgress size={16} /> : <GitHubIcon />}
+                                disabled={isPublishing || !content}
+                                onClick={handlePublish}
                             >
-                                see guidelines
-                            </Typography>
-                        </>
-                    )}
-                </Typography>
-            )}
-            <CognitiveMarkdownEditor
-                value={content}
-                onChange={setContent}
-                placeholder="Edit content here..."
-                rows={20}
-                categories={config.categories}
-            />
+                                {isPublishing ? 'Publishing...' : 'Publish'}
+                            </Button>
+                        )}
+                        {lastSaved && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <CheckCircleIcon color="success" sx={{ fontSize: 16 }} />
+                                <Typography variant="caption" color="text.secondary">
+                                    Saved {lastSaved.toLocaleTimeString()}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
 
-            <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Button
-                    variant="contained"
-                    startIcon={<SaveIcon />}
-                    onClick={handleSave}
-                    size="large"
-                >
-                    Save Now
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <TextField
+                        value={name}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                        variant="standard"
+                        placeholder="Entity Name"
+                        fullWidth
+                        InputProps={{
+                            disableUnderline: true,
+                            sx: { fontSize: '1.5rem', fontWeight: 600 }
+                        }}
+                    />
+                </Box>
 
-                {lastSaved && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CheckCircleIcon color="success" fontSize="small" />
+                {/* AI Instructions Banner */}
+                <Box sx={{ mt: 2, p: 1.5, bgcolor: 'secondary.50', borderRadius: 2, border: '1px solid', borderColor: 'secondary.200', display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="caption" fontWeight="bold" color="secondary.main" display="flex" alignItems="center" gap={0.5}>
+                            <AutoAwesomeIcon fontSize="inherit" /> AI Generation
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Last saved: {lastSaved.toLocaleTimeString()}
+                            {isModelReady
+                                ? "Local AI model is ready. Click generate to draft content."
+                                : "To use local AI generation, enable the model in the Instructions step."}
                         </Typography>
                     </Box>
+                    {isModelReady && (
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            color="secondary"
+                            onClick={handleAiGenerate}
+                            disabled={isGenerating || !name}
+                            startIcon={isGenerating ? <CircularProgress size={16} /> : <AutoAwesomeIcon />}
+                        >
+                            {isGenerating ? 'Generating...' : 'Draft Content'}
+                        </Button>
+                    )}
+                </Box>
+            </Box>
+
+            {/* Editor Area - scrollable */}
+            <Box sx={{ flexGrow: 1, overflow: 'auto', p: 3, pb: 10 }}>
+                {config.hint && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                        💡 {config.hint}
+                    </Typography>
                 )}
+
+                <CognitiveMarkdownEditor
+                    value={content}
+                    onChange={setContent}
+                    placeholder="Enter cognitive markdown content..."
+                    rows={30} // Give plenty of space
+                    categories={config.categories}
+                />
+            </Box>
+
+            {/* Floating Action Button */}
+            <Box sx={{ position: 'absolute', bottom: 32, right: 32, zIndex: 10 }}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSave}
+                    size="large"
+                    sx={{
+                        borderRadius: 28,
+                        height: 56,
+                        px: 4,
+                        boxShadow: 6,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        fontWeight: 'bold'
+                    }}
+                    startIcon={<SaveIcon />}
+                >
+                    Save Changes
+                </Button>
             </Box>
         </Box>
     );

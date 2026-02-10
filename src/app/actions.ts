@@ -1,6 +1,4 @@
 import { Octokit } from 'octokit';
-import { getServerSession } from "next-auth";
-import { GET } from "./api/auth/[...nextauth]/route"; // Import auth options handler
 import { Interpreter } from '../interpreter/md_to_jsonld';
 
 export async function validateSkill(markdown: string): Promise<{ success: boolean; data: any; error: string | null }> {

@@ -1,7 +1,7 @@
 export interface RemoteEntity {
     id: string;
     name: string;
-    type: 'competency' | 'concept' | 'skill' | 'tool';
+    type: 'competency' | 'concept' | 'skill' | 'tool' | 'meta-skill';
     description: string;
     tags: string[];
     repositoryUrl: string;
@@ -28,11 +28,16 @@ export class RemoteRepositoryService {
         try {
             // Assume repoUrl is like https://github.com/user/repo
             // Convert to raw content URL for registry.json
-            const rawBase = repoUrl.replace('github.com', 'raw.githubusercontent.com') + '/main';
+            let rawBase = repoUrl;
+            if (repoUrl.includes('github.com') && !repoUrl.includes('raw.githubusercontent.com')) {
+                rawBase = repoUrl.replace('github.com', 'raw.githubusercontent.com') + '/main';
+            }
+
             const response = await fetch(`${rawBase}/registry.json`);
 
             if (!response.ok) {
-                throw new Error(`Failed to fetch registry from ${repoUrl}`);
+                console.warn(`Failed to fetch registry from ${repoUrl}: ${response.status} ${response.statusText}`);
+                return [];
             }
 
             const registry: RemoteRegistry = await response.json();
@@ -46,7 +51,7 @@ export class RemoteRepositoryService {
                 sourceRepoUrl: repoUrl
             }));
         } catch (error) {
-            console.error('Error fetching remote registry:', error);
+            console.error(`Error fetching remote registry from ${repoUrl}:`, error);
             return [];
         }
     }

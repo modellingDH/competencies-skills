@@ -19,33 +19,39 @@ interface PageProps {
     searchParams: Promise<{ source?: string; rawUrl?: string; sourceRepoName?: string }>;
 }
 
-// Generate static params for all example entities
+// Generate static params for all entities
 export async function generateStaticParams() {
-    return [
-        { type: 'competency', id: 'network_security_analyst' },
-        { type: 'competency', id: 'data_pipeline_engineer' },
-        { type: 'concept', id: 'sql_injection' },
-        { type: 'concept', id: 'oauth2' },
-        { type: 'concept', id: 'api_rate_limiting' },
-        { type: 'skill', id: 'analyze_log_file' },
-        { type: 'skill', id: 'validate_json_schema' },
-        { type: 'skill', id: 'parse_api_response' },
-        { type: 'tool', id: 'parse_json' },
-        { type: 'tool', id: 'regex_match' },
-        { type: 'tool', id: 'http_request' },
-    ];
+    const types = ['competencies', 'concepts', 'skills', 'tools'];
+    const params = [];
+
+    for (const pluralType of types) {
+        // concepts -> concept
+        let singularType = pluralType.slice(0, -1);
+        if (pluralType === 'competencies') singularType = 'competency';
+
+        const typeDir = path.join(process.cwd(), 'library', pluralType);
+        try {
+            const files = await fs.readdir(typeDir);
+            for (const file of files) {
+                if (file.endsWith('.md')) {
+                    params.push({
+                        type: singularType,
+                        id: file.replace('.md', '')
+                    });
+                }
+            }
+        } catch (e) {
+            // directory might not exist
+        }
+    }
+    return params;
 }
 
-async function loadEntityContent(type: string, id: string, source?: string, rawUrl?: string): Promise<string | null> {
+async function loadEntityContent(type: string, id: string): Promise<string | null> {
     try {
-        if (source === 'remote' && rawUrl) {
-            const response = await fetch(rawUrl);
-            return response.ok ? await response.text() : null;
-        }
-
         // Use plural form for directory name: competency → competencies, concept → concepts
         const typeDir = type.endsWith('y') ? type.slice(0, -1) + 'ies' : type + 's';
-        const filePath = path.join(process.cwd(), 'public', 'examples', typeDir, `${id}.md`);
+        const filePath = path.join(process.cwd(), 'library', typeDir, `${id}.md`);
         const content = await fs.readFile(filePath, 'utf-8');
         return content;
     } catch (error) {
@@ -58,10 +64,9 @@ function generateURI(type: string, id: string): string {
     return `https://modellingdh.github.io/competencies-skills/entities/${type}/${id}`;
 }
 
-export default async function EntityDetailPage({ params, searchParams }: PageProps) {
+export default async function EntityDetailPage({ params }: { params: Promise<{ type: string; id: string }> }) {
     const { type, id } = await params;
-    const { source, rawUrl, sourceRepoName } = await searchParams;
-    const content = await loadEntityContent(type, id, source, rawUrl);
+    const content = await loadEntityContent(type, id);
 
     if (!content) {
         notFound();
@@ -69,7 +74,6 @@ export default async function EntityDetailPage({ params, searchParams }: PagePro
 
     const uri = generateURI(type, id);
     const entityName = id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const isRemote = source === 'remote';
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
@@ -81,7 +85,7 @@ export default async function EntityDetailPage({ params, searchParams }: PagePro
                     </LinkIconButton>
                     <Box>
                         <Typography variant="h4">
-                            {entityName} {isRemote && <Chip label={sourceRepoName || 'Remote'} size="small" variant="outlined" color="info" sx={{ ml: 1 }} />}
+                            {entityName}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                             <Chip label={type} size="small" color="primary" sx={{ textTransform: 'capitalize' }} />
@@ -111,9 +115,6 @@ export default async function EntityDetailPage({ params, searchParams }: PagePro
                         content={content}
                         id={id}
                         type={type as any}
-                        rawUrl={rawUrl || undefined}
-                        sourceRepoName={sourceRepoName || undefined}
-                        sourceRepoUrl={undefined} // We don't have this in searchParams yet, but it's optional
                     />
                 </Paper>
 

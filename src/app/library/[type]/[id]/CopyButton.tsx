@@ -15,9 +15,9 @@ interface CopyButtonProps {
     content: string;
     id: string;
     type: 'competency' | 'concept' | 'skill' | 'tool';
-    rawUrl: string | undefined;
-    sourceRepoName: string | undefined;
-    sourceRepoUrl: string | undefined;
+    rawUrl?: string;
+    sourceRepoName?: string;
+    sourceRepoUrl?: string;
 }
 
 export function CopyButton({ uri, content, id, type, rawUrl, sourceRepoName, sourceRepoUrl }: CopyButtonProps) {

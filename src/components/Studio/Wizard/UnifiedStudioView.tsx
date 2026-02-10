@@ -64,27 +64,7 @@ export function UnifiedStudioView() {
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)' }}>
-            {/* Header with Help Button */}
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                px: 3,
-                py: 1.5,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper'
-            }}>
-                <Typography variant="h6">
-                    {selectedEntity ? `Editing: ${selectedEntity.id}` : 'Authoring Studio'}
-                </Typography>
-                <CollapsibleGuidance
-                    activeGuidance={getGuidanceType()}
-                    onOpenGuidance={useCallback((fn: () => void) => setOpenGuidanceFn(() => fn), [])}
-                />
-            </Box>
-
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
             {/* Main Content Area */}
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {/* Left: Entity Navigation */}

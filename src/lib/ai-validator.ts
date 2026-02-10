@@ -17,25 +17,36 @@ export class AIValidator {
 
     async init() {
         if (typeof window === 'undefined') return; // Ensure we only run on client
-        if (this.generator || this.loading) return;
+
+        // Return if already initialized or loading
+        if (this.generator) return;
+        if (this.loading) return;
+
         this.loading = true;
         try {
             // Dynamically import to avoid SSR issues
+            // @ts-ignore
             const { pipeline, env } = await import('@xenova/transformers');
 
-            // Optional: Configure environment to avoid downloading models from local paths
-            // env.allowLocalModels = false;
+            // Allow local models to be loaded if available, but don't crash if not
+            if (env) {
+                env.allowLocalModels = false;
+                env.useBrowserCache = true;
+            }
 
             // Use a very small model for browser execution
-            // Xenova/distilgpt2 is ~80MB, which is acceptable for a "tiny" requirement
             this.generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
                 quantized: true,
                 progress_callback: (p: any) => {
-                    console.log(`Loading model: ${Math.round(p.progress ?? 0)}%`);
+                    if (p.status === 'progress') {
+                        console.log(`Loading model: ${Math.round(p.progress ?? 0)}%`);
+                    }
                 }
             });
+            console.log("AI Model loaded successfully");
         } catch (error) {
             console.error('Failed to load AI model:', error);
+            this.generator = null; // Ensure generator is null on failure
         } finally {
             this.loading = false;
         }

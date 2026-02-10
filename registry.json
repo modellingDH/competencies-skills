@@ -1,0 +1,201 @@
+{
+  "name": "Standard Library",
+  "description": "Official Competencies & Skills Library",
+  "updated_at": "2026-02-10T13:44:28.515Z",
+  "entities": [
+    {
+      "id": "analyze_log_file",
+      "name": "Analyze Log File",
+      "type": "skill",
+      "description": "Use this skill when you need to extract insights from log files, identify patterns, detect anomalies, or investigate security incidents through log analysis.",
+      "tags": [
+        "debugging",
+        "monitoring",
+        "security"
+      ],
+      "path": "library/skills/analyze_log_file.md"
+    },
+    {
+      "id": "check_connectivity",
+      "name": "check_connectivity",
+      "type": "skill",
+      "description": "",
+      "tags": [],
+      "path": "library/skills/check_connectivity.md"
+    },
+    {
+      "id": "creative_writing",
+      "name": "creative_writing",
+      "type": "skill",
+      "description": "",
+      "tags": [],
+      "path": "library/skills/creative_writing.md"
+    },
+    {
+      "id": "diagnose_network",
+      "name": "diagnose_network",
+      "type": "skill",
+      "description": "",
+      "tags": [],
+      "path": "library/skills/diagnose_network.md"
+    },
+    {
+      "id": "parse_api_response",
+      "name": "Parse API Response",
+      "type": "skill",
+      "description": "Use this skill to extract and transform data from API responses, handling errors, pagination, and different response formats.",
+      "tags": [
+        "api",
+        "integration",
+        "data-extraction"
+      ],
+      "path": "library/skills/parse_api_response.md"
+    },
+    {
+      "id": "validate_json_schema",
+      "name": "Validate JSON Schema",
+      "type": "skill",
+      "description": "Use this skill to verify that JSON data conforms to a defined schema, ensuring data quality and preventing downstream errors in data pipelines or API integrations.",
+      "tags": [
+        "data-validation",
+        "api",
+        "quality"
+      ],
+      "path": "library/skills/validate_json_schema.md"
+    },
+    {
+      "id": "data_pipeline_engineer",
+      "name": "Data Pipeline Engineer",
+      "type": "competency",
+      "description": "",
+      "tags": [
+        "data-engineering",
+        "etl",
+        "automation"
+      ],
+      "path": "library/competencies/data_pipeline_engineer.md"
+    },
+    {
+      "id": "network_security_analyst",
+      "name": "Network Security Analyst",
+      "type": "competency",
+      "description": "",
+      "tags": [
+        "security",
+        "networking",
+        "incident-response"
+      ],
+      "path": "library/competencies/network_security_analyst.md"
+    },
+    {
+      "id": "http_request",
+      "name": "HTTP Request",
+      "type": "tool",
+      "description": "",
+      "tags": [
+        "network",
+        "api",
+        "http"
+      ],
+      "path": "library/tools/http_request.md"
+    },
+    {
+      "id": "parse_json",
+      "name": "Parse JSON",
+      "type": "tool",
+      "description": "",
+      "tags": [
+        "data",
+        "parsing",
+        "json"
+      ],
+      "path": "library/tools/parse_json.md"
+    },
+    {
+      "id": "regex_match",
+      "name": "Regex Match",
+      "type": "tool",
+      "description": "",
+      "tags": [
+        "text",
+        "pattern-matching",
+        "string"
+      ],
+      "path": "library/tools/regex_match.md"
+    },
+    {
+      "id": "api_rate_limiting",
+      "name": "API Rate Limiting",
+      "type": "concept",
+      "description": "",
+      "tags": [
+        "api",
+        "performance",
+        "security",
+        "scalability"
+      ],
+      "path": "library/concepts/api_rate_limiting.md"
+    },
+    {
+      "id": "oauth2",
+      "name": "OAuth 2.0",
+      "type": "concept",
+      "description": "",
+      "tags": [
+        "authentication",
+        "security",
+        "api",
+        "protocol"
+      ],
+      "path": "library/concepts/oauth2.md"
+    },
+    {
+      "id": "sql_injection",
+      "name": "SQL Injection",
+      "type": "concept",
+      "description": "",
+      "tags": [
+        "security",
+        "vulnerability",
+        "web-security"
+      ],
+      "path": "library/concepts/sql_injection.md"
+    },
+    {
+      "id": "skill_id",
+      "name": "Skill Name",
+      "type": "meta-skill",
+      "description": "Concise, router-facing description of when to use this skill.",
+      "tags": [],
+      "path": "library/meta-skills/cognitive_skill_template.md"
+    },
+    {
+      "id": "interaction_structurer",
+      "name": "Interaction Structurer",
+      "type": "meta-skill",
+      "description": "Analyzes past interactions to extract reusable skills and format them as Cognitive Markdown.",
+      "tags": [],
+      "path": "library/meta-skills/interaction_structurer.md"
+    },
+    {
+      "id": "skill_id",
+      "name": "Skill Name",
+      "type": "meta-skill",
+      "description": "Concise, router-facing description of when to use this skill.",
+      "tags": [],
+      "path": "library/meta-skills/skill_template.md"
+    },
+    {
+      "id": "using_meta_skills",
+      "name": "Using Meta Skills",
+      "type": "meta-skill",
+      "description": "Instructions on how to effectively utilize Meta-Skills to govern, structure, and enhance AI interactions and skill production.",
+      "tags": [
+        "meta-learning",
+        "instruction",
+        "governance"
+      ],
+      "path": "library/meta-skills/using_meta_skills.md"
+    }
+  ]
+}

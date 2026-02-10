@@ -53,6 +53,7 @@ export function EntityNavigation({
             ...Object.keys(project.concepts).map(id => ({ id, type: 'concept', source: 'project', sourceRepoName: 'Local Project' })),
             ...Object.keys(project.skills).map(id => ({ id, type: 'skill', source: 'project', sourceRepoName: 'Local Project' })),
             ...Object.keys(project.tools).map(id => ({ id, type: 'tool', source: 'project', sourceRepoName: 'Local Project' })),
+            ...Object.keys(project.metaSkills || {}).map(id => ({ id, type: 'meta-skill', source: 'project', sourceRepoName: 'Local Project' })),
         ];
 
         const remote = remoteEntities.map(e => ({ ...e, source: 'remote' }));
@@ -102,6 +103,14 @@ export function EntityNavigation({
             icon: <BuildIcon />,
             items: Object.keys(project.tools),
             color: 'info' as const
+        },
+        {
+            key: 'metaSkills',
+            singular: 'meta-skill',
+            label: 'Meta Skills',
+            icon: <AutoFixHighIcon />,
+            items: Object.keys(project.metaSkills || {}),
+            color: 'secondary' as const
         }
     ];
 

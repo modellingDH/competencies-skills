@@ -14,6 +14,7 @@ export interface ProjectState {
     skills: Record<string, string>;       // ID -> Markdown Content
     tools: Record<string, string>;        // ID -> Markdown Content
     concepts: Record<string, string>;     // ID -> Markdown Content
+    metaSkills: Record<string, string>;     // ID -> Markdown Content
     remoteRepositories: RemoteRepo[];     // List of remote repository objects
 }
 
@@ -23,7 +24,14 @@ export const INITIAL_PROJECT_STATE: ProjectState = {
     skills: {},
     tools: {},
     concepts: {},
-    remoteRepositories: []
+    metaSkills: {},
+    remoteRepositories: [
+        {
+            url: 'https://github.com/modellingDH/competencies-skills',
+            name: 'Official Registry',
+            enabled: true
+        }
+    ]
 };
 
 export class ProjectManager {
@@ -35,6 +43,7 @@ export class ProjectManager {
      * - /skills
      * - /tools
      * - /concepts
+     * - /meta-skills
      */
     static async exportProject(state: ProjectState): Promise<void> {
         const zip = new JSZip();
@@ -63,6 +72,12 @@ export class ProjectManager {
             conceptFolder?.file(`${id}.md`, content);
         });
 
+        // Meta Skills
+        const metaFolder = zip.folder("meta-skills");
+        Object.entries(state.metaSkills || {}).forEach(([id, content]) => {
+            metaFolder?.file(`${id}.md`, content);
+        });
+
         // Generate and download
         const blob = await zip.generateAsync({ type: "blob" });
         saveAs(blob, `${state.name.replace(/\s+/g, '_').toLowerCase()}_export.zip`);
@@ -76,24 +91,7 @@ export class ProjectManager {
         const zip = await JSZip.loadAsync(file);
         const newState: ProjectState = { ...INITIAL_PROJECT_STATE, name: file.name.replace('.zip', '') };
 
-        // Helper to read folder contents
-        const readFolder = async (folderName: string, targetMap: Record<string, string>) => {
-            const folder = zip.folder(folderName);
-            if (!folder) return;
-
-            const filePromises: Promise<void>[] = [];
-            folder.forEach((relativePath, zipEntry) => {
-                if (!zipEntry.dir && zipEntry.name.endsWith('.md')) {
-                    filePromises.push((async () => {
-                        const content = await zipEntry.async('string');
-                        // Use filename without extension as ID
-                        const id = relativePath.replace('.md', '');
-                        targetMap[id] = content;
-                    })());
-                }
-            });
-            await Promise.all(filePromises);
-        };
+        // Helper to read folder contents, implemented inline below for simplicity in one pass
 
         // Re-implementing read logic correctly for JSZip structure
         for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
@@ -113,6 +111,7 @@ export class ProjectManager {
             else if (typeDir === 'skills') newState.skills[id] = content;
             else if (typeDir === 'tools') newState.tools[id] = content;
             else if (typeDir === 'concepts') newState.concepts[id] = content;
+            else if (typeDir === 'meta-skills') newState.metaSkills[id] = content;
         }
 
         return newState;

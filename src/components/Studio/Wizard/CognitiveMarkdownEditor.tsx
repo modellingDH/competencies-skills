@@ -9,6 +9,14 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Fab from '@mui/material/Fab';
+import CircularProgress from '@mui/material/CircularProgress';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useAI } from '@/contexts/AIContext';
 import { COGNITIVE_MD_NOTATION, type NotationTool } from '@/lib/cognitive-md-notation';
 import { useWizard } from '@/components/Studio/Wizard/WizardContext';
 
@@ -29,9 +37,64 @@ export function CognitiveMarkdownEditor({
 }: CognitiveMarkdownEditorProps) {
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const { project, remoteEntities } = useWizard();
+    const { generate, isModelReady } = useAI();
+
+    // Autocomplete State
     const [showAutocomplete, setShowAutocomplete] = useState(false);
     const [autocompleteOptions, setAutocompleteOptions] = useState<Array<{ type: string, id: string, source?: string }>>([]);
     const [cursorPosition, setCursorPosition] = useState(0);
+
+    // AI Assistant State
+    const [aiDialogOpen, setAiDialogOpen] = useState(false);
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [aiLoading, setAiLoading] = useState(false);
+    const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
+
+    const handleSelect = () => {
+        if (inputRef.current) {
+            setSelectionRange({
+                start: inputRef.current.selectionStart,
+                end: inputRef.current.selectionEnd
+            });
+        }
+    };
+
+    const handleAiAssist = async () => {
+        if (!aiPrompt) return;
+        setAiLoading(true);
+        try {
+            const hasSelection = selectionRange && selectionRange.end > selectionRange.start;
+            const selectedText = hasSelection ? value.substring(selectionRange.start, selectionRange.end) : '';
+
+            let systemInstruction = "You are a helpful technical writing assistant for cognitive agent definitions.";
+            let userPrompt = aiPrompt;
+
+            if (hasSelection) {
+                userPrompt = `Rewrite the following text based on this instruction: "${aiPrompt}"\n\nText to Rewrite:\n${selectedText}`;
+            }
+
+            const result = await generate(userPrompt, systemInstruction);
+
+            // Insert or Replace
+            if (inputRef.current) {
+                const start = hasSelection ? selectionRange!.start : inputRef.current.selectionStart;
+                const end = hasSelection ? selectionRange!.end : inputRef.current.selectionEnd;
+
+                const before = value.substring(0, start);
+                const after = value.substring(end);
+                const newValue = before + result + after;
+
+                onChange(newValue);
+                setAiDialogOpen(false);
+                setAiPrompt('');
+            }
+        } catch (error) {
+            console.error("AI Assist Failed", error);
+            alert("AI Generation failed.");
+        } finally {
+            setAiLoading(false);
+        }
+    };
 
     const insertTemplate = (template: string) => {
         if (!inputRef.current) return;
@@ -201,6 +264,9 @@ export function CognitiveMarkdownEditor({
                     inputRef={inputRef}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
+                    onSelect={handleSelect}
+                    onClick={handleSelect}
+                    onKeyUp={handleSelect}
                     multiline
                     rows={rows}
                     fullWidth
@@ -257,6 +323,53 @@ export function CognitiveMarkdownEditor({
                     </Paper>
                 )}
             </Box>
+
+            {/* AI Assistant FAB */}
+            {isModelReady && (
+                <Box sx={{ position: 'absolute', bottom: 16, right: 16, zIndex: 10 }}>
+                    <Fab
+                        color="primary"
+                        size="small"
+                        onClick={() => setAiDialogOpen(true)}
+                        title="AI Writing Assistant"
+                    >
+                        <AutoAwesomeIcon />
+                    </Fab>
+                </Box>
+            )}
+
+            {/* AI Assistant Dialog */}
+            <Dialog open={aiDialogOpen} onClose={() => setAiDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AutoAwesomeIcon color="primary" />
+                    {selectionRange && selectionRange.end > selectionRange.start ? "Refine Selection" : "Help me write"}
+                </DialogTitle>
+                <DialogContent>
+                    {selectionRange && selectionRange.end > selectionRange.start && (
+                        <Typography variant="caption" sx={{ mb: 2, display: 'block', bgcolor: 'grey.100', p: 1, borderRadius: 1, maxHeight: 60, overflow: 'hidden' }}>
+                            Selected: "{value.substring(selectionRange.start, selectionRange.end)}"
+                        </Typography>
+                    )}
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Instructions"
+                        fullWidth
+                        multiline
+                        rows={3}
+                        placeholder={selectionRange && selectionRange.end > selectionRange.start ? "e.g., Make it more formal, Shorten this..." : "e.g., Describe a cognitive process for..."}
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        disabled={aiLoading}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setAiDialogOpen(false)} color="inherit">Cancel</Button>
+                    <Button onClick={handleAiAssist} variant="contained" disabled={!aiPrompt || aiLoading} startIcon={aiLoading ? <CircularProgress size={16} /> : <AutoAwesomeIcon />}>
+                        {aiLoading ? "Generating..." : "Generate"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

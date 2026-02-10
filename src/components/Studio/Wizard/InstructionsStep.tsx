@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
@@ -11,15 +13,64 @@ import ListItemText from '@mui/material/ListItemText';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CreateIcon from '@mui/icons-material/Create';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { useWizard } from './WizardContext';
 
 export function InstructionsStep() {
+    const { openWorkspace, workspacePath, toggleSettings } = useWizard();
+    const [isElectron, setIsElectron] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.electronAPI) {
+            setIsElectron(true);
+        }
+    }, []);
+
     return (
         <Box sx={{ maxWidth: 900, mx: 'auto', p: 4 }}>
             <Typography variant="h4" gutterBottom>
                 Instructions to the Authoring Studio
             </Typography>
+
+            {isElectron && (
+                <Paper variant="outlined" sx={{ p: 3, mb: 4, bgcolor: 'primary.50', borderColor: 'primary.main' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                        <FolderOpenIcon color="primary" fontSize="large" />
+                        <Typography variant="h6">
+                            Desktop Workspace
+                        </Typography>
+                    </Box>
+                    <Typography variant="body1" paragraph>
+                        You are running the desktop version. Open a local folder to save your work directly to disk.
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <Button
+                            variant="contained"
+                            onClick={openWorkspace}
+                            startIcon={<FolderOpenIcon />}
+                            color="primary"
+                        >
+                            Open Workspace Folder
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            onClick={() => toggleSettings(true)}
+                            startIcon={<SettingsIcon />}
+                        >
+                            Configure Settings & AI
+                        </Button>
+                        {workspacePath && (
+                            <Box sx={{ bgcolor: 'background.paper', p: 1, borderRadius: 1, border: 1, borderColor: 'divider', width: '100%' }}>
+                                <Typography variant="caption" sx={{ fontFamily: 'monospace', display: 'block' }}>
+                                    <strong>Current:</strong> {workspacePath}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </Paper>
+            )}
+
             <Typography variant="body1" color="text.secondary" paragraph>
                 This tool guides you through creating structured knowledge definitions for AI agents,
                 following best practices from cognitive science and prompt engineering.
@@ -110,40 +161,6 @@ export function InstructionsStep() {
                     that skills compose. Example: 'parse_json' with parameters for validation and error handling.
                 </Typography>
             </Paper>
-
-            <Divider sx={{ my: 3 }} />
-
-            <Typography variant="h5" gutterBottom>
-                Import/Export Functionality
-            </Typography>
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <Paper variant="outlined" sx={{ flex: 1, p: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <CloudDownloadIcon color="primary" sx={{ mr: 1 }} />
-                        <Typography variant="subtitle1" fontWeight="bold">
-                            Import Project
-                        </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                        Upload a previously exported ZIP file to continue working on an existing project.
-                        All entities and their relationships will be restored.
-                    </Typography>
-                </Paper>
-
-                <Paper variant="outlined" sx={{ flex: 1, p: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <CloudUploadIcon color="primary" sx={{ mr: 1 }} />
-                        <Typography variant="subtitle1" fontWeight="bold">
-                            Export Project
-                        </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                        Download your work as a ZIP containing Markdown files and validated JSON-LD.
-                        Ready for version control and GitHub submission.
-                    </Typography>
-                </Paper>
-            </Box>
 
             <Divider sx={{ my: 3 }} />
 

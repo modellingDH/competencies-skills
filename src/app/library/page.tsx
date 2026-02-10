@@ -13,6 +13,7 @@ import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Paper from '@mui/material/Paper';
 import SearchIcon from '@mui/icons-material/Search';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -24,6 +25,7 @@ import { VirtuosoGrid } from 'react-virtuoso';
 import { styled } from '@mui/material/styles';
 import Fuse from 'fuse.js';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useWizard } from '@/components/Studio/Wizard/WizardContext';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -32,6 +34,10 @@ import PublicIcon from '@mui/icons-material/Public';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import Avatar from '@mui/material/Avatar';
+import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
 
 // Example entities metadata (in production, this would come from file system or API)
 const EXAMPLE_ENTITIES = [
@@ -49,17 +55,19 @@ const EXAMPLE_ENTITIES = [
 ];
 
 const TYPE_ICONS = {
-    competency: <WorkspacePremiumIcon />,
-    concept: <LightbulbIcon />,
-    skill: <AccountTreeIcon />,
-    tool: <BuildIcon />
+    competency: <WorkspacePremiumIcon fontSize="small" />,
+    concept: <LightbulbIcon fontSize="small" />,
+    skill: <AccountTreeIcon fontSize="small" />,
+    tool: <BuildIcon fontSize="small" />,
+    'meta-skill': <AutoFixHighIcon fontSize="small" />
 };
 
 const TYPE_COLORS = {
     competency: 'primary' as const,
     concept: 'secondary' as const,
     skill: 'success' as const,
-    tool: 'warning' as const
+    tool: 'warning' as const,
+    'meta-skill': 'secondary' as const // Reusing secondary or 'info'
 };
 
 const GridContainer = styled('div')(({ theme }) => ({
@@ -78,10 +86,16 @@ export default function LibraryPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<'name' | 'type' | 'source'>('name');
+    const [copiedId, setCopiedId] = useState<string | null>(null);
 
     const allEntities = useMemo(() => {
         const local = EXAMPLE_ENTITIES.map(e => ({ ...e, source: 'local' as const, sourceRepoName: 'Standard Library' }));
         const remote = remoteEntities.map(e => ({ ...e, source: 'remote' as const }));
+
+        // Also include project entities if they are not in EXAMPLE_ENTITIES (basic merge logic)
+        // For now, let's just stick to the example + remote logic as existing, but assume 'project' entities might be mixed in via `remoteEntities` or need separate handling if we want to show *current workspace* stuff.
+        // Given the prompt "Standard Library", let's keep it clean.
+
         return [...local, ...remote];
     }, [remoteEntities]);
 
@@ -117,120 +131,105 @@ export default function LibraryPage() {
             concept: allEntities.filter(e => e.type === 'concept').length,
             skill: allEntities.filter(e => e.type === 'skill').length,
             tool: allEntities.filter(e => e.type === 'tool').length,
+            'meta-skill': allEntities.filter(e => e.type === 'meta-skill').length,
         };
     }, [allEntities]);
+
+    const handleCopy = (text: string, id: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
             <Container maxWidth="lg">
-                {/* Header */}
-                <Box sx={{ mb: 4, display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <LinkIconButton href="/" aria-label="back to home">
-                        <ArrowBackIcon />
-                    </LinkIconButton>
-                    <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="h3" gutterBottom>
-                            Library Explorer
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                            Browse and explore pre-built competencies, concepts, skills, and tools for AI agents
-                        </Typography>
-                    </Box>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        component={Link}
-                        href="/sources"
-                        sx={{ mt: 1 }}
-                    >
-                        Manage Sources
-                    </Button>
-                </Box>
-
-                {/* Search and Filter */}
-                <Box sx={{ mb: 4 }}>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12 }}>
-                            <TextField
-                                fullWidth
-                                placeholder="Search by name, description, tags, or source..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon color="action" />
-                                        </InputAdornment>
-                                    )
-                                }}
-                            />
-                        </Grid>
-                    </Grid>
-
-                    <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                        <ToggleButtonGroup
-                            value={typeFilter}
-                            exclusive
-                            onChange={(e, newType) => setTypeFilter(newType)}
-                            size="small"
-                        >
-                            <ToggleButton value="competency">
-                                <WorkspacePremiumIcon sx={{ mr: 0.5 }} fontSize="small" />
-                                Competencies ({stats.competency})
-                            </ToggleButton>
-                            <ToggleButton value="concept">
-                                <LightbulbIcon sx={{ mr: 0.5 }} fontSize="small" />
-                                Concepts ({stats.concept})
-                            </ToggleButton>
-                            <ToggleButton value="skill">
-                                <AccountTreeIcon sx={{ mr: 0.5 }} fontSize="small" />
-                                Skills ({stats.skill})
-                            </ToggleButton>
-                            <ToggleButton value="tool">
-                                <BuildIcon sx={{ mr: 0.5 }} fontSize="small" />
-                                Tools ({stats.tool})
-                            </ToggleButton>
-                        </ToggleButtonGroup>
-                        {typeFilter && (
-                            <Button size="small" onClick={() => setTypeFilter(null)}>
-                                Clear Filter
-                            </Button>
-                        )}
-
-                        <Box sx={{ borderLeft: 1, borderColor: 'divider', pl: 2, ml: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="caption" color="text.secondary">Sort by:</Typography>
-                            <ToggleButtonGroup
-                                value={sortBy}
-                                exclusive
-                                onChange={(e, newSort) => newSort && setSortBy(newSort)}
+                {/* Header & Instructions */}
+                <Box sx={{ mb: 6 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                        <LinkIconButton href="/" aria-label="back to home" sx={{ mr: 2 }}>
+                            <ArrowBackIcon />
+                        </LinkIconButton>
+                        <Box>
+                            <Typography variant="h4" fontWeight="bold" gutterBottom>
+                                Library Explorer
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                A curated registry of cognitive behaviors.
+                            </Typography>
+                        </Box>
+                        <Box sx={{ ml: 'auto' }}>
+                            <Button
+                                variant="outlined"
+                                startIcon={<AddIcon />}
+                                component={Link}
+                                href="/sources"
                                 size="small"
                             >
-                                <ToggleButton value="name">Name</ToggleButton>
-                                <ToggleButton value="type">Type</ToggleButton>
-                                <ToggleButton value="source">Source</ToggleButton>
-                            </ToggleButtonGroup>
-                        </Box>
-
-                        <Box sx={{ ml: 'auto', display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <Typography variant="caption" color="text.secondary">
-                                {project.remoteRepositories.length} Sources Connected
-                            </Typography>
-                            <IconButton size="small" onClick={() => syncRemoteRepos()} disabled={isSyncing}>
-                                <SyncIcon fontSize="small" className={isSyncing ? 'rotating' : ''} />
-                            </IconButton>
+                                Sources
+                            </Button>
                         </Box>
                     </Box>
+
+                    {/* How to use banner */}
+                    <Alert severity="info" icon={<AutoFixHighIcon fontSize="inherit" />} sx={{ borderRadius: 2, bgcolor: 'info.lighter', border: '1px solid', borderColor: 'info.light' }}>
+                        <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+                            How to feed Skills to AI:
+                        </Typography>
+                        <Box component="ol" sx={{ m: 0, pl: 2, fontSize: '0.875rem' }}>
+                            <li><strong>Locate</strong> the needed Skill or Meta-Skill below.</li>
+                            <li>Click <strong>View Details</strong> to access the raw Cognitive Markdown.</li>
+                            <li><strong>Copy & Paste</strong> the raw markdown directly into your Agent's System Prompt or Context Window.</li>
+                            <li>(Optional) If using a Router, copy the <strong>ID</strong> (e.g., <code>@skill:analyze_log</code>) to reference it dynamically.</li>
+                        </Box>
+                    </Alert>
                 </Box>
 
-                {/* Results */}
-                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                    <Typography variant="h6">
-                        {filteredEntities.length} {filteredEntities.length === 1 ? 'Entity' : 'Entities'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        Showing results sorted by {sortBy}
-                    </Typography>
-                </Box>
+                {/* Search and Filters - Lean Design */}
+                <Paper elevation={0} sx={{ p: 2, mb: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <TextField
+                        size="small"
+                        placeholder="Search library..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ flexGrow: 1, minWidth: 200 }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon color="action" fontSize="small" />
+                                </InputAdornment>
+                            )
+                        }}
+                    />
+
+                    <ToggleButtonGroup
+                        value={typeFilter}
+                        exclusive
+                        onChange={(e, newType) => setTypeFilter(newType)}
+                        size="small"
+                        sx={{ border: 'none' }}
+                    >
+                        {Object.keys(stats).map((key) => (
+                            <ToggleButton key={key} value={key} sx={{ border: 'none', borderRadius: 2, px: 1.5, mx: 0.5, bgcolor: typeFilter === key ? 'action.selected' : 'transparent' }}>
+                                {TYPE_ICONS[key as keyof typeof TYPE_ICONS]}
+                                <Typography variant="caption" sx={{ ml: 1, textTransform: 'capitalize' }}>
+                                    {key.replace('-', ' ')} ({stats[key as keyof typeof stats]})
+                                </Typography>
+                            </ToggleButton>
+                        ))}
+                    </ToggleButtonGroup>
+
+                    {typeFilter && (
+                        <Button size="small" onClick={() => setTypeFilter(null)} color="error" sx={{ textTransform: 'none' }}>
+                            Reset
+                        </Button>
+                    )}
+                </Paper>
+
+                {/* Results Count */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2, fontWeight: 'medium' }}>
+                    Showing {filteredEntities.length} entities
+                </Typography>
 
                 <VirtuosoGrid
                     style={{ height: '70vh', width: '100%' }}
@@ -243,73 +242,117 @@ export default function LibraryPage() {
                     itemContent={(index) => {
                         const entity = filteredEntities[index];
                         if (!entity) return null;
+                        const copyText = `@${entity.type}:${entity.id}`;
+                        const isCopied = copiedId === entity.id;
+
+                        // Determine colors based on type
+                        const typeColor = TYPE_COLORS[entity.type as keyof typeof TYPE_COLORS] || 'primary';
+
                         return (
                             <Card
+                                elevation={0}
                                 sx={{
                                     height: '100%',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    transition: 'transform 0.2s, box-shadow 0.2s',
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 3,
+                                    transition: 'all 0.2s',
+                                    bgcolor: entity.type === 'meta-skill' ? 'secondary.50' : 'background.paper',
                                     '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: 4
+                                        transform: 'translateY(-2px)',
+                                        borderColor: `${typeColor}.main`,
+                                        boxShadow: 2
                                     }
                                 }}
                             >
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1, flexWrap: 'wrap' }}>
-                                        {TYPE_ICONS[entity.type as keyof typeof TYPE_ICONS]}
-                                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }}>
-                                            {entity.sourceRepoName}
-                                        </Typography>
-                                        <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-                                            <Chip
-                                                label={entity.type}
-                                                size="small"
-                                                color={TYPE_COLORS[entity.type as keyof typeof TYPE_COLORS]}
-                                                sx={{ textTransform: 'capitalize' }}
-                                            />
+                                <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                                        <Avatar
+                                            sx={{
+                                                width: 32,
+                                                height: 32,
+                                                bgcolor: entity.type === 'meta-skill' ? 'secondary.main' : 'action.hover',
+                                                color: entity.type === 'meta-skill' ? 'white' : 'text.primary',
+                                                mr: 1.5
+                                            }}
+                                        >
+                                            {TYPE_ICONS[entity.type as keyof typeof TYPE_ICONS]}
+                                        </Avatar>
+                                        <Box sx={{ overflow: 'hidden' }}>
+                                            <Typography variant="subtitle1" fontWeight="bold" noWrap title={entity.name}>
+                                                {entity.name}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                                {entity.id}
+                                            </Typography>
                                         </Box>
                                     </Box>
-                                    <Typography variant="h6" gutterBottom noWrap title={entity.name}>
-                                        {entity.name}
-                                    </Typography>
+
                                     <Typography
                                         variant="body2"
                                         color="text.secondary"
                                         sx={{
+                                            mb: 2,
+                                            minHeight: '2.5em',
                                             display: '-webkit-box',
-                                            WebkitLineClamp: 3,
+                                            WebkitLineClamp: 2,
                                             WebkitBoxOrient: 'vertical',
                                             overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            minHeight: '4.5em',
-                                            mb: 1
+                                            fontSize: '0.85rem'
                                         }}
                                     >
-                                        {entity.description}
+                                        {entity.description || "No description provided."}
                                     </Typography>
+
                                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                        {entity.tags.map((tag) => (
+                                        {entity.tags.slice(0, 3).map((tag) => (
                                             <Chip
                                                 key={tag}
                                                 label={tag}
                                                 size="small"
-                                                variant="outlined"
+                                                sx={{
+                                                    height: 20,
+                                                    fontSize: '0.7rem',
+                                                    bgcolor: 'action.hover',
+                                                    color: 'text.secondary'
+                                                }}
                                             />
                                         ))}
                                     </Box>
                                 </CardContent>
-                                <CardActions>
-                                    <Button
-                                        component={Link}
+
+                                <CardActions sx={{ p: 2, pt: 0, justifyContent: 'space-between' }}>
+                                    <Tooltip title={isCopied ? "Copied ID!" : "Copy Router ID"}>
+                                        <Button
+                                            size="small"
+                                            color="inherit"
+                                            startIcon={isCopied ? <AutoFixHighIcon color="success" fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+                                            onClick={() => handleCopy(copyText, entity.id)}
+                                            sx={{
+                                                fontSize: '0.75rem',
+                                                color: isCopied ? 'success.main' : 'text.secondary',
+                                                minWidth: 0
+                                            }}
+                                        >
+                                            {isCopied ? "Copied" : "Copy ID"}
+                                        </Button>
+                                    </Tooltip>
+
+                                    <LinkButton
                                         href={`/library/${entity.type}/${entity.id}${entity.source === 'remote' ? `?source=remote&rawUrl=${encodeURIComponent((entity as any).rawUrl)}&sourceRepoName=${encodeURIComponent((entity as any).sourceRepoName)}` : ''}`}
                                         size="small"
-                                        fullWidth
                                         variant="contained"
+                                        color={typeColor}
+                                        sx={{
+                                            boxShadow: 'none',
+                                            '&:hover': { boxShadow: 'none' },
+                                            fontSize: '0.75rem'
+                                        }}
                                     >
-                                        View Details
-                                    </Button>
+                                        Details
+                                    </LinkButton>
                                 </CardActions>
                             </Card>
                         );
@@ -317,12 +360,13 @@ export default function LibraryPage() {
                 />
 
                 {filteredEntities.length === 0 && (
-                    <Box sx={{ textAlign: 'center', py: 8 }}>
-                        <Typography variant="h6" color="text.secondary" gutterBottom>
-                            No entities found
+                    <Box sx={{ textAlign: 'center', py: 8, opacity: 0.6 }}>
+                        <AccountTreeIcon sx={{ fontSize: 48, mb: 1, color: 'text.disabled' }} />
+                        <Typography variant="h6" color="text.secondary">
+                            No library entities found
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Try adjusting your search or filter criteria
+                            Try searching for something else
                         </Typography>
                     </Box>
                 )}

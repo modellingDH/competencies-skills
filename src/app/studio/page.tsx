@@ -7,30 +7,38 @@ import Container from '@mui/material/Container';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
-import StepButton from '@mui/material/StepButton';
 import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import Link from 'next/link';
+import IconButton from '@mui/material/IconButton';
+import CloudQueueIcon from '@mui/icons-material/CloudQueue';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PublicIcon from '@mui/icons-material/Public';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+
+import { useAI } from '@/contexts/AIContext';
 
 import { WizardProvider, useWizard } from '@/components/Studio/Wizard/WizardContext';
 import { InstructionsStep } from '@/components/Studio/Wizard/InstructionsStep';
 import { UnifiedStudioView } from '@/components/Studio/Wizard/UnifiedStudioView';
 import { ValidationStep } from '@/components/Studio/Wizard/ValidationStep';
-import { ProjectManager } from '@/services/project_manager';
 import { LinkIconButton } from '@/components/LinkComponents';
+import { SettingsDialog } from '@/components/Studio/Settings/SettingsDialog';
 
 const steps = ['Instructions', 'Authoring Studio', 'Validation'];
 
 function StudioContent() {
-    const { activeStep, setActiveStep, project, handleNext, handleBack, setProject } = useWizard();
+    const {
+        activeStep,
+        setActiveStep,
+        handleNext,
+        handleBack,
+        isSettingsOpen,
+        toggleSettings,
+        driveUser,
+        githubUser
+    } = useWizard();
     const router = useRouter();
+    const { isModelReady } = useAI();
     const searchParams = useSearchParams();
 
     // Sync URL with active step on mount
@@ -53,24 +61,6 @@ function StudioContent() {
             router.push(`/studio?${params.toString()}`, { scroll: false });
         }
     }, [activeStep]);
-
-    const handleExport = async () => {
-        await ProjectManager.exportProject(project);
-    };
-
-    const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        try {
-            const loadedProject = await ProjectManager.loadProject(file);
-            setProject(loadedProject);
-            alert(`Project "${loadedProject.name}" loaded successfully!`);
-        } catch (error) {
-            alert('Failed to load project. Please check the file format.');
-            console.error(error);
-        }
-    };
 
     const getStepContent = (step: number) => {
         switch (step) {
@@ -97,77 +87,80 @@ function StudioContent() {
                             Authoring Studio
                         </Typography>
 
+                        {/* Status Indicators */}
+                        <IconButton
+                            color={driveUser ? "success" : "inherit"}
+                            onClick={() => toggleSettings(true, 1)}
+                            title={driveUser ? `Drive: ${driveUser}` : "Drive: Not Connected"}
+                            sx={{ mr: 1 }}
+                        >
+                            <CloudQueueIcon />
+                        </IconButton>
+
+                        <IconButton
+                            color={githubUser ? "secondary" : "inherit"}
+                            onClick={() => toggleSettings(true, 1)}
+                            title={githubUser ? `GitHub: ${githubUser}` : "GitHub: Not Connected"}
+                            sx={{ mr: 1 }}
+                        >
+                            <GitHubIcon />
+                        </IconButton>
+
+                        <IconButton
+                            color={isModelReady ? "success" : "inherit"}
+                            onClick={() => toggleSettings(true, 2)}
+                            title={isModelReady ? "AI Writing Assist: Ready" : "AI Writing Assist: Off (Click to configure)"}
+                            sx={{ mr: 1 }}
+                        >
+                            <AutoAwesomeIcon />
+                        </IconButton>
+
                         <Button
                             variant="outlined"
                             color="inherit"
-                            startIcon={<PublicIcon />}
-                            component={Link}
-                            href="/sources"
-                            sx={{ mr: 2 }}
+                            startIcon={<SettingsIcon />}
+                            onClick={() => toggleSettings(true, 0)}
+                            sx={{ ml: 1 }}
                         >
-                            Manage Sources
-                        </Button>
-
-                        <Button
-                            component="label"
-                            variant="outlined"
-                            color="inherit"
-                            startIcon={<CloudUploadIcon />}
-                            sx={{ mr: 2 }}
-                        >
-                            Import Project
-                            <input
-                                type="file"
-                                hidden
-                                accept=".zip"
-                                onChange={handleImport}
-                            />
-                        </Button>
-
-                        <Button
-                            variant="contained"
-                            color="secondary"
-                            startIcon={<CloudDownloadIcon />}
-                            onClick={handleExport}
-                        >
-                            Export Project
+                            Settings
                         </Button>
                     </Toolbar>
                 </Container>
             </AppBar>
 
-            <Container component="main" maxWidth="lg" sx={{ flexGrow: 1, py: 4 }}>
-                <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-                    {steps.map((label, index) => (
-                        <Step key={label}>
-                            <StepButton onClick={() => setActiveStep(index)}>
-                                {label}
-                            </StepButton>
-                        </Step>
-                    ))}
-                </Stepper>
+            <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+                    <Typography variant="subtitle1" fontWeight="bold" color="text.secondary">
+                        {activeStep === 0 && "Step 1: Instructions"}
+                        {activeStep === 1 && "Step 2: Writer"}
+                        {activeStep === 2 && "Step 3: Validation"}
+                    </Typography>
 
-                <Paper variant="outlined" sx={{ p: 4, borderRadius: 4 }}>
-                    {getStepContent(activeStep)}
-                </Paper>
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                    <Button
-                        disabled={activeStep === 0}
-                        onClick={handleBack}
-                        variant="outlined"
-                    >
-                        Back
-                    </Button>
-                    <Button
-                        onClick={handleNext}
-                        variant="contained"
-                        disabled={activeStep === steps.length - 1}
-                    >
-                        Next
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                            disabled={activeStep === 0}
+                            onClick={handleBack}
+                            variant="outlined"
+                            size="small"
+                        >
+                            {activeStep === 0 ? "Back" : activeStep === 1 ? "Instructions" : "Write"}
+                        </Button>
+                        <Button
+                            onClick={handleNext}
+                            variant="contained"
+                            disabled={activeStep === steps.length - 1}
+                            size="small"
+                        >
+                            {activeStep === 0 ? "Start Writing" : activeStep === 1 ? "Validate" : "Finish"}
+                        </Button>
+                    </Box>
                 </Box>
-            </Container>
+
+                <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    {getStepContent(activeStep)}
+                </Box>
+            </Box>
+            {isSettingsOpen && <SettingsDialog open={isSettingsOpen} onClose={() => toggleSettings(false)} />}
         </Box>
     );
 }

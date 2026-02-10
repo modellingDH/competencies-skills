@@ -2,7 +2,7 @@
   "name": "competencies-skills",
   "version": "1.0.0",
   "description": "**A GitHub-backed library for defining, managing, and instructing AI agents.**",
-  "main": "index.js",
+  "main": "electron/main.js",
   "directories": {
     "doc": "docs"
   },
@@ -10,7 +10,33 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "electron:dev": "concurrently \"cross-env BROWSER=none npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "update-registry": "tsx scripts/update-registry.ts",
+    "watch-registry": "tsx scripts/watch-registry.ts"
+  },
+  "build": {
+    "appId": "com.cognitive-library.app",
+    "productName": "Cognitive Library",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "out/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   },
   "repository": {
     "type": "git",
@@ -24,21 +50,31 @@
   },
   "homepage": "https://github.com/modellingDH/competencies-skills#readme",
   "devDependencies": {
+    "@types/electron-squirrel-startup": "^1.0.2",
     "@types/node": "^25.0.2",
     "@types/react": "19.2.7",
     "autoprefixer": "^10.4.23",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.2.1",
+    "electron-builder": "^26.7.0",
+    "electron-rebuild": "^3.2.9",
+    "electron-squirrel-startup": "^1.0.1",
     "eslint-config-next": "^16.0.10",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "wait-on": "^9.0.3",
     "zod": "^4.2.1"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@mui/icons-material": "^7.3.6",
+    "@google-cloud/local-auth": "^3.0.1",
+    "@mlc-ai/web-llm": "^0.2.80",
+    "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.6",
     "@mui/material-nextjs": "^7.3.6",
     "@radix-ui/react-slot": "^1.2.4",
@@ -49,8 +85,12 @@
     "@xenova/transformers": "^2.17.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.4",
+    "electron-is-dev": "^3.0.1",
+    "electron-store": "^11.0.2",
     "file-saver": "^2.0.5",
     "fuse.js": "^7.1.0",
+    "googleapis": "^171.4.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.561.0",
     "next": "^16.0.10",

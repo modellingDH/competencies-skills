@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "**A GitHub-backed library for defining, managing, and instructing AI agents.**",
   "main": "electron/main.js",
-  "directories": {
-    "doc": "docs"
-  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -29,7 +26,8 @@
       "package.json"
     ],
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "category": "public.app-category.developer-tools"
     },
     "win": {
       "target": "nsis"
@@ -58,7 +56,6 @@
     "cross-env": "^10.1.0",
     "electron": "^40.2.1",
     "electron-builder": "^26.7.0",
-    "electron-rebuild": "^3.2.9",
     "electron-squirrel-startup": "^1.0.1",
     "eslint-config-next": "^16.0.10",
     "postcss": "^8.5.6",

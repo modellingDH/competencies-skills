@@ -59,20 +59,16 @@ function assessContent(content: string): ValidationState['content'] {
     const warnings: string[] = [];
     if (content.includes('TODO')) warnings.push("Contains TODO placeholders");
 
-    // Check ACTION verbs (uppercase)
-    const extensiveRegex = /> ACTION: ([a-z])/g;
-    let match;
-    while ((match = extensiveRegex.exec(content)) !== null) {
-        warnings.push(`ACTION items should start with uppercase verbs (found "${match[0]}")`);
-        break; // Report once
+    // Check for vague or empty sections
+    const bodyMatch = content.match(/## BODY[\s\S]*?(##|$)/);
+    if (bodyMatch && bodyMatch[0].split(/\s+/).length < 10) {
+        warnings.push("BODY section appears too brief — add procedural steps or detail.");
     }
 
-    // Check Decision Blocks
-    if (content.includes('? DECISION:')) {
-        // Naive check for arrows
-        if (!content.includes('-> YES') && !content.includes('-> NO')) {
-            warnings.push("Decisions should have clear '-> YES' / '-> NO' paths");
-        }
+    // Check for imperative verbs in step headings (numbered lists or bold headings)
+    const steps = content.match(/^\d+\.\s+\*\*([a-z])/gm);
+    if (steps && steps.length > 0) {
+        warnings.push("Step headings should start with uppercase verbs (e.g. '1. **Validate**' not '1. **validate**').");
     }
 
     return { valid: warnings.length === 0, warnings };
@@ -81,11 +77,13 @@ function assessContent(content: string): ValidationState['content'] {
 function assessLinks(content: string, project: ProjectState): ValidationState['links'] {
     const missing: string[] = [];
     const broken: string[] = [];
-    const linkRegex = /@(competency|skill|concept|tool):(\w+)/g;
+
+    // Detect both old @type:id syntax and new markdown links [Name](/library/type/id)
+    const oldLinkRegex = /@(competency|skill|concept|tool):(\w+)/g;
+    const mdLinkRegex = /\[([^\]]+)\]\(\/library\/(competency|skill|concept|tool|meta-skill)\/(\w+)\)/g;
     let match;
 
     const validIds = new Set<string>();
-    // Collect all valid IDs
     if (project) {
         Object.keys(project.competencies || {}).forEach(id => validIds.add(`competency:${id}`));
         Object.keys(project.skills || {}).forEach(id => validIds.add(`skill:${id}`));
@@ -93,9 +91,20 @@ function assessLinks(content: string, project: ProjectState): ValidationState['l
         Object.keys(project.tools || {}).forEach(id => validIds.add(`tool:${id}`));
     }
 
-    while ((match = linkRegex.exec(content)) !== null) {
-        const [fullMatch, type, id] = match;
+    // Check old-style @type:id links (should be migrated)
+    while ((match = oldLinkRegex.exec(content)) !== null) {
+        const [, type, id] = match;
         const ref = `${type}:${id}`;
+        if (!validIds.has(ref)) {
+            broken.push(ref);
+        }
+    }
+
+    // Check new-style markdown links
+    while ((match = mdLinkRegex.exec(content)) !== null) {
+        const [, , type, id] = match;
+        const normalizedType = type === 'meta-skill' ? 'skill' : type;
+        const ref = `${normalizedType}:${id}`;
         if (!validIds.has(ref)) {
             broken.push(ref);
         }

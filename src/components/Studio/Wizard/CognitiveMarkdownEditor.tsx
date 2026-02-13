@@ -17,7 +17,7 @@ import Fab from '@mui/material/Fab';
 import CircularProgress from '@mui/material/CircularProgress';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useAI } from '@/contexts/AIContext';
-import { COGNITIVE_MD_NOTATION, type NotationTool } from '@/lib/cognitive-md-notation';
+
 import { useWizard } from '@/components/Studio/Wizard/WizardContext';
 
 interface CognitiveMarkdownEditorProps {
@@ -26,6 +26,7 @@ interface CognitiveMarkdownEditorProps {
     placeholder?: string;
     rows?: number;
     categories?: Array<'cognitive' | 'markdown' | 'reference' | 'structure'>;
+    fullHeight?: boolean;
 }
 
 export function CognitiveMarkdownEditor({
@@ -33,64 +34,85 @@ export function CognitiveMarkdownEditor({
     onChange,
     placeholder = '# Start writing...',
     rows = 15,
-    categories = ['cognitive', 'markdown', 'reference']
+    categories = ['cognitive', 'markdown', 'reference'],
+    fullHeight = false
 }: CognitiveMarkdownEditorProps) {
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const { project, remoteEntities } = useWizard();
     const { generate, isModelReady } = useAI();
 
     // Autocomplete State
+    const { setAiPanelResult, setAiPanelOpen, setAiPanelAction } = useWizard();
+
+    // Autocomplete State
     const [showAutocomplete, setShowAutocomplete] = useState(false);
     const [autocompleteOptions, setAutocompleteOptions] = useState<Array<{ type: string, id: string, source?: string }>>([]);
     const [cursorPosition, setCursorPosition] = useState(0);
 
-    // AI Assistant State
-    const [aiDialogOpen, setAiDialogOpen] = useState(false);
-    const [aiPrompt, setAiPrompt] = useState('');
-    const [aiLoading, setAiLoading] = useState(false);
+    // AI Context Menu State
+    const [contextMenuPos, setContextMenuPos] = useState<{ top: number, left: number } | null>(null);
     const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     const handleSelect = () => {
         if (inputRef.current) {
-            setSelectionRange({
-                start: inputRef.current.selectionStart,
-                end: inputRef.current.selectionEnd
-            });
+            const start = inputRef.current.selectionStart;
+            const end = inputRef.current.selectionEnd;
+            if (end > start) {
+                setSelectionRange({ start, end });
+            } else {
+                setSelectionRange(null);
+                setContextMenuPos(null);
+            }
         }
     };
 
-    const handleAiAssist = async () => {
-        if (!aiPrompt) return;
+    const handleMouseUp = (e: React.MouseEvent) => {
+        if (inputRef.current) {
+            const start = inputRef.current.selectionStart;
+            const end = inputRef.current.selectionEnd;
+            if (end > start) {
+                // Show menu near mouse cursor
+                setContextMenuPos({ top: e.clientY, left: e.clientX });
+            } else {
+                setContextMenuPos(null);
+            }
+        }
+    };
+
+    // Hide menu on typing
+    const handleKeyUp = () => {
+        // handleSelect is sufficient usually but let's hide menu on key press
+        setContextMenuPos(null);
+        handleSelect();
+    };
+
+    const runAiAction = async (action: 'revise' | 'expand' | 'fix') => {
+        if (!selectionRange) return;
+
+        const selectedText = value.substring(selectionRange.start, selectionRange.end);
         setAiLoading(true);
+        setContextMenuPos(null); // Hide menu
+
         try {
-            const hasSelection = selectionRange && selectionRange.end > selectionRange.start;
-            const selectedText = hasSelection ? value.substring(selectionRange.start, selectionRange.end) : '';
-
-            let systemInstruction = "You are a helpful technical writing assistant for cognitive agent definitions.";
-            let userPrompt = aiPrompt;
-
-            if (hasSelection) {
-                userPrompt = `Rewrite the following text based on this instruction: "${aiPrompt}"\n\nText to Rewrite:\n${selectedText}`;
+            let prompt = "";
+            switch (action) {
+                case 'revise': prompt = "Revise and improve the clarity of the following text."; break;
+                case 'expand': prompt = "Expand on the following text with more details."; break;
+                case 'fix': prompt = "Fix grammar and spelling in the following text."; break;
             }
 
-            const result = await generate(userPrompt, systemInstruction);
+            const userPrompt = `${prompt}\n\nText:\n${selectedText}`;
+            const systemPrompt = "You are an expert technical editor. Output ONLY the improved version of the text.";
 
-            // Insert or Replace
-            if (inputRef.current) {
-                const start = hasSelection ? selectionRange!.start : inputRef.current.selectionStart;
-                const end = hasSelection ? selectionRange!.end : inputRef.current.selectionEnd;
+            const result = await generate(userPrompt, systemPrompt);
 
-                const before = value.substring(0, start);
-                const after = value.substring(end);
-                const newValue = before + result + after;
-
-                onChange(newValue);
-                setAiDialogOpen(false);
-                setAiPrompt('');
+            if (result) {
+                setAiPanelResult(result);
+                setAiPanelOpen(true);
             }
-        } catch (error) {
-            console.error("AI Assist Failed", error);
-            alert("AI Generation failed.");
+        } catch (e) {
+            console.error("AI Action failed", e);
         } finally {
             setAiLoading(false);
         }
@@ -191,13 +213,9 @@ export function CognitiveMarkdownEditor({
         }, 10);
     };
 
-    // Organize tools by the three groups
-    const styleTools = categories.includes('markdown') ? COGNITIVE_MD_NOTATION.markdown : [];
-    const sectionTools = [
-        ...(categories.includes('cognitive') ? (COGNITIVE_MD_NOTATION.cognitive || []) : []),
-        ...(categories.includes('structure') ? (COGNITIVE_MD_NOTATION.structure || []) : [])
-    ];
-    const entityTools = categories.includes('reference') ? COGNITIVE_MD_NOTATION.reference : [];
+    const styleTools: Array<{ label: string; template: string; icon: React.ReactNode; desc: string; syntax?: string; category: string }> = [];
+    const sectionTools: typeof styleTools = [];
+    const entityTools: typeof styleTools = [];
 
     const groups = [
         { label: 'Style', tools: styleTools, color: 'default' as const },
@@ -206,76 +224,49 @@ export function CognitiveMarkdownEditor({
     ].filter(g => g.tools && g.tools.length > 0);
 
     return (
-        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', position: 'relative' }}>
-            {/* Toolbar */}
-            <Box sx={{
-                p: 1.5,
-                bgcolor: 'grey.50',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1.5
-            }}>
-                {groups.map((group) => (
-                    <Box key={group.label}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                            <Chip
-                                label={group.label}
-                                size="small"
-                                color={group.color}
-                                sx={{ fontWeight: 600, fontSize: '0.7rem' }}
-                            />
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                            {(group.tools as NotationTool[]).map((tool) => (
-                                <Tooltip key={tool.label} title={`${tool.desc} (${tool.syntax})`} arrow>
-                                    <Button
-                                        onClick={() => insertTemplate(tool.template)}
-                                        startIcon={tool.icon}
-                                        variant="outlined"
-                                        size="small"
-                                        sx={{
-                                            minWidth: 'auto',
-                                            px: 1.5,
-                                            py: 0.5,
-                                            fontSize: '0.75rem',
-                                            textTransform: 'none',
-                                            borderColor: 'divider',
-                                            color: 'text.primary',
-                                            '&:hover': {
-                                                borderColor: 'primary.main',
-                                                bgcolor: 'primary.50'
-                                            }
-                                        }}
-                                    >
-                                        {tool.label}
-                                    </Button>
-                                </Tooltip>
-                            ))}
-                        </Box>
-                    </Box>
-                ))}
-            </Box>
+        <Box sx={{
+            border: fullHeight ? 'none' : '1px solid',
+            borderColor: 'divider',
+            borderRadius: fullHeight ? 0 : 1,
+            overflow: 'hidden',
+            position: 'relative',
+            height: fullHeight ? '100%' : 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+        }}>
+            {/* Toolbar Removed for Lean UX */}
 
             {/* Editor */}
-            <Box sx={{ position: 'relative' }}>
+            <Box sx={{ position: 'relative', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                 <TextField
                     inputRef={inputRef}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     onSelect={handleSelect}
-                    onClick={handleSelect}
-                    onKeyUp={handleSelect}
+                    onMouseUp={handleMouseUp}
+                    onKeyUp={handleKeyUp}
                     multiline
                     rows={rows}
                     fullWidth
                     variant="standard"
                     placeholder={placeholder}
                     sx={{
-                        p: 2,
+                        p: fullHeight ? 0 : 2,
                         bgcolor: 'background.paper',
-                        '& .MuiInputBase-root': { fontFamily: 'monospace', fontSize: '0.9rem' },
+                        height: fullHeight ? '100%' : 'auto',
+                        '& .MuiInputBase-root': {
+                            fontFamily: 'monospace',
+                            fontSize: '0.9rem',
+                            height: fullHeight ? '100%' : 'auto',
+                            alignItems: 'flex-start',
+                            p: 0
+                        },
+                        '& .MuiInputBase-input': {
+                            height: fullHeight ? '100% !important' : 'auto',
+                            overflow: fullHeight ? 'auto !important' : 'hidden',
+                            padding: fullHeight ? '16px !important' : undefined,
+                            boxSizing: 'border-box'
+                        },
                         '& .MuiInput-underline:before': { borderBottom: 'none' },
                         '& .MuiInput-underline:after': { borderBottom: 'none' }
                     }}
@@ -324,52 +315,42 @@ export function CognitiveMarkdownEditor({
                 )}
             </Box>
 
-            {/* AI Assistant FAB */}
-            {isModelReady && (
-                <Box sx={{ position: 'absolute', bottom: 16, right: 16, zIndex: 10 }}>
-                    <Fab
-                        color="primary"
-                        size="small"
-                        onClick={() => setAiDialogOpen(true)}
-                        title="AI Writing Assistant"
-                    >
-                        <AutoAwesomeIcon />
-                    </Fab>
-                </Box>
+            {/* Context Menu for Selection */}
+            {contextMenuPos && isModelReady && (
+                <Paper
+                    elevation={4}
+                    sx={{
+                        position: 'fixed',
+                        top: contextMenuPos.top + 10,
+                        left: contextMenuPos.left,
+                        zIndex: 1400,
+                        p: 0.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        minWidth: 120
+                    }}
+                >
+                    <Typography variant="caption" sx={{ px: 1, py: 0.5, color: 'text.secondary', fontWeight: 'bold' }}>AI Actions</Typography>
+                    <ListItemButton dense onClick={() => runAiAction('revise')}>
+                        <AutoAwesomeIcon fontSize="small" sx={{ mr: 1, fontSize: 16 }} />
+                        <ListItemText primary="Revise" primaryTypographyProps={{ fontSize: '0.875rem' }} />
+                    </ListItemButton>
+                    <ListItemButton dense onClick={() => runAiAction('expand')}>
+                        <ListItemText primary="Expand" primaryTypographyProps={{ fontSize: '0.875rem' }} />
+                    </ListItemButton>
+                    <ListItemButton dense onClick={() => runAiAction('fix')}>
+                        <ListItemText primary="Fix Grammar" primaryTypographyProps={{ fontSize: '0.875rem' }} />
+                    </ListItemButton>
+                </Paper>
             )}
 
-            {/* AI Assistant Dialog */}
-            <Dialog open={aiDialogOpen} onClose={() => setAiDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <AutoAwesomeIcon color="primary" />
-                    {selectionRange && selectionRange.end > selectionRange.start ? "Refine Selection" : "Help me write"}
-                </DialogTitle>
-                <DialogContent>
-                    {selectionRange && selectionRange.end > selectionRange.start && (
-                        <Typography variant="caption" sx={{ mb: 2, display: 'block', bgcolor: 'grey.100', p: 1, borderRadius: 1, maxHeight: 60, overflow: 'hidden' }}>
-                            Selected: "{value.substring(selectionRange.start, selectionRange.end)}"
-                        </Typography>
-                    )}
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Instructions"
-                        fullWidth
-                        multiline
-                        rows={3}
-                        placeholder={selectionRange && selectionRange.end > selectionRange.start ? "e.g., Make it more formal, Shorten this..." : "e.g., Describe a cognitive process for..."}
-                        value={aiPrompt}
-                        onChange={(e) => setAiPrompt(e.target.value)}
-                        disabled={aiLoading}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAiDialogOpen(false)} color="inherit">Cancel</Button>
-                    <Button onClick={handleAiAssist} variant="contained" disabled={!aiPrompt || aiLoading} startIcon={aiLoading ? <CircularProgress size={16} /> : <AutoAwesomeIcon />}>
-                        {aiLoading ? "Generating..." : "Generate"}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            {/* AI Loading Indicator (Global/Overlay) */}
+            {aiLoading && (
+                <Box sx={{ position: 'absolute', bottom: 10, right: 10, bgcolor: 'background.paper', p: 1, borderRadius: 1, boxShadow: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CircularProgress size={16} />
+                    <Typography variant="caption">Generating...</Typography>
+                </Box>
+            )}
         </Box>
     );
 }

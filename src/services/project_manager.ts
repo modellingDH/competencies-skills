@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { DEFAULT_SYSTEM_SKILL_STATES } from '@/lib/system-skills';
 
 // Type definitions for our in-memory project state
 export interface RemoteRepo {
@@ -16,6 +17,7 @@ export interface ProjectState {
     concepts: Record<string, string>;     // ID -> Markdown Content
     metaSkills: Record<string, string>;     // ID -> Markdown Content
     remoteRepositories: RemoteRepo[];     // List of remote repository objects
+    enabledSystemSkills: Record<string, boolean>; // System entity ID -> enabled/disabled
 }
 
 export const INITIAL_PROJECT_STATE: ProjectState = {
@@ -31,7 +33,8 @@ export const INITIAL_PROJECT_STATE: ProjectState = {
             name: 'Official Registry',
             enabled: true
         }
-    ]
+    ],
+    enabledSystemSkills: { ...DEFAULT_SYSTEM_SKILL_STATES }
 };
 
 export class ProjectManager {

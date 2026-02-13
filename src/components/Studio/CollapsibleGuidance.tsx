@@ -75,29 +75,22 @@ export function CollapsibleGuidance({ activeGuidance, onOpenGuidance }: Collapsi
 
                 <Accordion sx={{ mt: 2 }} defaultExpanded={false}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography variant="subtitle2">Cognitive Notation Reference</Typography>
+                        <Typography variant="subtitle2">Markdown Reference</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                         <Typography variant="caption" component="div" sx={{ fontFamily: 'monospace', lineHeight: 1.8 }}>
-                            <strong>Core:</strong><br />
-                            &gt; ACTION: Do something<br />
-                            ? DECISION: Question?<br />
-                            @ CONTEXT: Check state<br />
-                            ! CRITICAL: Safety<br />
+                            <strong>Structure:</strong><br />
+                            ## Heading<br />
+                            ### Sub-heading<br />
+                            1. Numbered step<br />
+                            - Bullet point<br />
+                            **Bold text**<br />
                             <br />
-                            <strong>Extended:</strong><br />
-                            OBSERVE: Check first<br />
-                            VALIDATE: Assert condition<br />
-                            FAILURE: Handle errors<br />
-                            THOUGHT: Reasoning<br />
-                            EXAMPLE: Show how<br />
+                            <strong>Links:</strong><br />
+                            [Name](/library/type/id)<br />
+                            [External](https://...)<br />
                             <br />
-                            <strong>References:</strong><br />
-                            @skill:id<br />
-                            @concept:id<br />
-                            @tool:id<br />
-                            <br />
-                            <em>Drag entities from left sidebar to insert references</em>
+                            <em>Use standard markdown links to reference library entities</em>
                         </Typography>
                     </AccordionDetails>
                 </Accordion>

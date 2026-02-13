@@ -23,6 +23,7 @@ import Paper from '@mui/material/Paper';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import CloudQueueIcon from '@mui/icons-material/CloudQueue';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import GitHubIcon from '@mui/icons-material/GitHub';
@@ -176,8 +177,23 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     <Tab label="Project Management" />
                 </Tabs>
 
-                {/* General Tab: Repositories */}
+                {/* General Tab: Repositories & Local Folder */}
                 <TabPanel value={settingsTab} index={0}>
+                    <Typography variant="h6" gutterBottom>Local Storage</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 4, alignItems: 'center' }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Project Directory"
+                            value={'~/Code/competencies-skills'} // Hardcoded for now as project.path might not exist on type
+                            disabled
+                        />
+                        <Button variant="outlined" startIcon={<FolderOpenIcon />}>
+                            Change
+                        </Button>
+                    </Box>
+                    <Divider sx={{ mb: 3 }} />
+
                     <Typography variant="h6" gutterBottom>Community Registries</Typography>
                     <Typography variant="body2" color="text.secondary" paragraph>
                         Manage the Git repositories used as sources for importing Cognitive Skills, Concepts, and Tools.
@@ -242,7 +258,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                                 <Box>
                                     <Typography variant="subtitle1" fontWeight="bold">Google Drive</Typography>
                                     <Typography variant="caption" display="block">
-                                        Enables saving and syncing your cognitive library to your personal Drive.
+                                        Enables saving and syncing your cognitive library to your personal Drive (Path: /Cognitive Library). Skills are automatically mirrored to the 'meta-skills' folder.
                                     </Typography>
                                 </Box>
                             </Box>

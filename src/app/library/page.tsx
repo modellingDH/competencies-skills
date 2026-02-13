@@ -14,6 +14,7 @@ import Chip from '@mui/material/Chip';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Paper from '@mui/material/Paper';
+import Switch from '@mui/material/Switch';
 import SearchIcon from '@mui/icons-material/Search';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -38,21 +39,12 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { SYSTEM_ENTITIES } from '@/lib/system-skills';
+import { PageInfoTooltip } from '@/components/PageInfoTooltip';
 
 // Example entities metadata (in production, this would come from file system or API)
-const EXAMPLE_ENTITIES = [
-    { id: 'network_security_analyst', name: 'Network Security Analyst', type: 'competency', tags: ['security', 'networking'], description: 'Protect networks from cyber threats and coordinate incident response' },
-    { id: 'data_pipeline_engineer', name: 'Data Pipeline Engineer', type: 'competency', tags: ['data-engineering', 'etl'], description: 'Build and maintain automated data workflows' },
-    { id: 'sql_injection', name: 'SQL Injection', type: 'concept', tags: ['security', 'vulnerability'], description: 'Code injection technique exploiting database vulnerabilities' },
-    { id: 'oauth2', name: 'OAuth 2.0', type: 'concept', tags: ['authentication', 'security'], description: 'Authorization framework for delegated access' },
-    { id: 'api_rate_limiting', name: 'API Rate Limiting', type: 'concept', tags: ['api', 'performance'], description: 'Control request frequency to protect services' },
-    { id: 'analyze_log_file', name: 'Analyze Log File', type: 'skill', tags: ['debugging', 'monitoring'], description: 'Extract insights and identify patterns in log files' },
-    { id: 'validate_json_schema', name: 'Validate JSON Schema', type: 'skill', tags: ['data-validation', 'api'], description: 'Verify JSON data conforms to defined schemas' },
-    { id: 'parse_api_response', name: 'Parse API Response', type: 'skill', tags: ['api', 'integration'], description: 'Extract and transform data from API responses' },
-    { id: 'parse_json', name: 'Parse JSON', type: 'tool', tags: ['data', 'parsing'], description: 'Parse JSON strings with comprehensive error handling' },
-    { id: 'regex_match', name: 'Regex Match', type: 'tool', tags: ['text', 'pattern-matching'], description: 'Perform regular expression matching on text' },
-    { id: 'http_request', name: 'HTTP Request', type: 'tool', tags: ['network', 'api'], description: 'Make HTTP requests with retry logic and error handling' },
-];
+// Example entities removed. Now fetching from project state.
 
 const TYPE_ICONS = {
     competency: <WorkspacePremiumIcon fontSize="small" />,
@@ -81,23 +73,105 @@ const CardWrapper = styled('div')(({ theme }) => ({
     height: '100%',
 }));
 
+interface Entity {
+    id: string;
+    name: string;
+    type: string;
+    tags: string[];
+    description: string;
+    source: 'local' | 'remote' | 'system';
+    sourceRepoName: string;
+    content?: string;
+}
+
 export default function LibraryPage() {
-    const { project, remoteEntities, isSyncing, syncRemoteRepos } = useWizard();
+    const { project, remoteEntities, isSyncing, syncRemoteRepos, deleteEntity, updateProject } = useWizard();
+
+    const toggleSystemSkill = (id: string) => {
+        updateProject(prev => ({
+            ...prev,
+            enabledSystemSkills: {
+                ...(prev.enabledSystemSkills || {}),
+                [id]: !(prev.enabledSystemSkills?.[id] ?? true)
+            }
+        }));
+    };
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<'name' | 'type' | 'source'>('name');
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
-    const allEntities = useMemo(() => {
-        const local = EXAMPLE_ENTITIES.map(e => ({ ...e, source: 'local' as const, sourceRepoName: 'Standard Library' }));
-        const remote = remoteEntities.map(e => ({ ...e, source: 'remote' as const }));
+    const allEntities = useMemo<Entity[]>(() => {
+        if (!project) return [];
 
-        // Also include project entities if they are not in EXAMPLE_ENTITIES (basic merge logic)
-        // For now, let's just stick to the example + remote logic as existing, but assume 'project' entities might be mixed in via `remoteEntities` or need separate handling if we want to show *current workspace* stuff.
-        // Given the prompt "Standard Library", let's keep it clean.
+        const localEntities: Entity[] = [];
 
-        return [...local, ...remote];
-    }, [remoteEntities]);
+        const mapToEntity = (collection: Record<string, string> | undefined, singularType: string): Entity[] => {
+            if (!collection) return [];
+            return Object.entries(collection).map(([id, content]) => {
+                const safeContent = typeof content === 'string' ? content : '';
+                const nameMatch = safeContent.match(/^name:\s*(.*)$/m);
+                const name = nameMatch?.[1] ? nameMatch[1].trim() : id.replace(/_/g, ' ');
+
+                return {
+                    id,
+                    name,
+                    type: singularType,
+                    tags: [] as string[],
+                    description: 'Local workspace entity',
+                    source: 'local' as const,
+                    sourceRepoName: 'Local Workspace',
+                    content: safeContent
+                };
+            });
+        };
+
+        // Map all types from project
+        // Note: Check if project properties exist before accessing if type is loose
+        if (project.competencies) localEntities.push(...mapToEntity(project.competencies, 'competency'));
+        if (project.skills) localEntities.push(...mapToEntity(project.skills, 'skill'));
+        if (project.tools) localEntities.push(...mapToEntity(project.tools, 'tool'));
+        if (project.concepts) localEntities.push(...mapToEntity(project.concepts, 'concept'));
+        // @ts-ignore - metaSkills naming
+        if (project.metaSkills) localEntities.push(...mapToEntity(project.metaSkills, 'meta-skill'));
+
+        // Ensure remote entities match the shape
+        const remote = remoteEntities.map(e => ({
+            id: e.id,
+            name: e.name,
+            type: e.type,
+            tags: (e.tags || []) as string[], // Ensure tags is string[]
+            description: e.description || '', // Ensure description is string
+            source: 'remote' as const,
+            sourceRepoName: (e as any).sourceRepoName || 'Remote', // Access with 'as any' if not strictly typed
+            content: (e as any).content // Access with 'as any' if not strictly typed
+        }));
+
+        // System entities
+        const systemEntities: Entity[] = SYSTEM_ENTITIES.map(se => {
+            const nameMatch = se.content.match(/^name:\s*(.*)$/m);
+            const objMatch = se.content.match(/##\s+OBJECTIVE[\s\S]*?\n([^#]+)/);
+            const roleMatch = se.content.match(/##\s+ROLE[\s\S]*?\n([^#]+)/);
+            const description = objMatch?.[1]
+                ? objMatch[1].trim().substring(0, 120).replace(/\n/g, ' ')
+                : roleMatch?.[1]
+                    ? roleMatch[1].trim().substring(0, 120).replace(/\n/g, ' ')
+                    : 'System entity';
+
+            return {
+                id: se.id,
+                name: se.name,
+                type: se.type,
+                tags: ['system'] as string[],
+                description,
+                source: 'system' as const,
+                sourceRepoName: 'System',
+                content: se.content
+            };
+        });
+
+        return [...systemEntities, ...localEntities, ...remote];
+    }, [project, remoteEntities]);
 
     const fuse = useMemo(() => new Fuse(allEntities, {
         keys: ['name', 'description', 'tags', 'sourceRepoName'],
@@ -142,7 +216,7 @@ export default function LibraryPage() {
     };
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
+        <Box sx={{ height: '100vh', overflow: 'auto', bgcolor: 'grey.50', py: 4 }}>
             <Container maxWidth="lg">
                 {/* Header & Instructions */}
                 <Box sx={{ mb: 6 }}>
@@ -150,13 +224,20 @@ export default function LibraryPage() {
                         <LinkIconButton href="/" aria-label="back to home" sx={{ mr: 2 }}>
                             <ArrowBackIcon />
                         </LinkIconButton>
-                        <Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <Typography variant="h4" fontWeight="bold" gutterBottom>
                                 Library Explorer
                             </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                                A curated registry of cognitive behaviors.
-                            </Typography>
+                            <PageInfoTooltip
+                                title="Library Explorer"
+                                description="Browse and manage cognitive entities — structured definitions that power AI agents."
+                                tips={[
+                                    'Click View Details to see the full markdown of any entity.',
+                                    'Copy & paste entity markdown directly into your AI agent\'s system prompt.',
+                                    'Use the search bar to filter by name, type, or content.',
+                                    'Toggle System Skills to show Gemma\'s built-in knowledge base.',
+                                ]}
+                            />
                         </Box>
                         <Box sx={{ ml: 'auto' }}>
                             <Button
@@ -178,9 +259,9 @@ export default function LibraryPage() {
                         </Typography>
                         <Box component="ol" sx={{ m: 0, pl: 2, fontSize: '0.875rem' }}>
                             <li><strong>Locate</strong> the needed Skill or Meta-Skill below.</li>
-                            <li>Click <strong>View Details</strong> to access the raw Cognitive Markdown.</li>
+                            <li>Click <strong>View Details</strong> to access the structured markdown content.</li>
                             <li><strong>Copy & Paste</strong> the raw markdown directly into your Agent's System Prompt or Context Window.</li>
-                            <li>(Optional) If using a Router, copy the <strong>ID</strong> (e.g., <code>@skill:analyze_log</code>) to reference it dynamically.</li>
+                            <li>(Optional) If using a Router, copy the <strong>ID</strong> (e.g., <code>skill/analyze_log</code>) to reference it dynamically.</li>
                         </Box>
                     </Alert>
                 </Box>
@@ -307,7 +388,20 @@ export default function LibraryPage() {
                                     </Typography>
 
                                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                        {entity.tags.slice(0, 3).map((tag) => (
+                                        {entity.source === 'system' && (
+                                            <Chip
+                                                icon={<SettingsIcon sx={{ fontSize: '0.7rem !important' }} />}
+                                                label="System"
+                                                size="small"
+                                                color="info"
+                                                variant="outlined"
+                                                sx={{
+                                                    height: 20,
+                                                    fontSize: '0.7rem',
+                                                }}
+                                            />
+                                        )}
+                                        {entity.tags.filter(t => t !== 'system').slice(0, 3).map((tag) => (
                                             <Chip
                                                 key={tag}
                                                 label={tag}
@@ -324,21 +418,51 @@ export default function LibraryPage() {
                                 </CardContent>
 
                                 <CardActions sx={{ p: 2, pt: 0, justifyContent: 'space-between' }}>
-                                    <Tooltip title={isCopied ? "Copied ID!" : "Copy Router ID"}>
-                                        <Button
-                                            size="small"
-                                            color="inherit"
-                                            startIcon={isCopied ? <AutoFixHighIcon color="success" fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
-                                            onClick={() => handleCopy(copyText, entity.id)}
-                                            sx={{
-                                                fontSize: '0.75rem',
-                                                color: isCopied ? 'success.main' : 'text.secondary',
-                                                minWidth: 0
-                                            }}
-                                        >
-                                            {isCopied ? "Copied" : "Copy ID"}
-                                        </Button>
-                                    </Tooltip>
+                                    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                                        {entity.source === 'system' ? (
+                                            <Tooltip title={project.enabledSystemSkills?.[entity.id] !== false ? 'Loaded in Gemma' : 'Disabled — not loaded in Gemma'}>
+                                                <Switch
+                                                    size="small"
+                                                    checked={project.enabledSystemSkills?.[entity.id] !== false}
+                                                    onChange={() => toggleSystemSkill(entity.id)}
+                                                    color="success"
+                                                />
+                                            </Tooltip>
+                                        ) : (
+                                            <>
+                                                <Tooltip title={isCopied ? "Copied ID!" : "Copy Router ID"}>
+                                                    <Button
+                                                        size="small"
+                                                        color="inherit"
+                                                        startIcon={isCopied ? <AutoFixHighIcon color="success" fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+                                                        onClick={() => handleCopy(copyText, entity.id)}
+                                                        sx={{
+                                                            fontSize: '0.75rem',
+                                                            color: isCopied ? 'success.main' : 'text.secondary',
+                                                            minWidth: 0
+                                                        }}
+                                                    >
+                                                        {isCopied ? "Copied" : "Copy ID"}
+                                                    </Button>
+                                                </Tooltip>
+                                                {entity.source === 'local' && (
+                                                    <Tooltip title="Delete">
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => {
+                                                                if (confirm(`Delete ${entity.name}?`)) {
+                                                                    deleteEntity(entity.type, entity.id);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+                                            </>
+                                        )}
+                                    </Box>
 
                                     <LinkButton
                                         href={`/library/${entity.type}/${entity.id}${entity.source === 'remote' ? `?source=remote&rawUrl=${encodeURIComponent((entity as any).rawUrl)}&sourceRepoName=${encodeURIComponent((entity as any).sourceRepoName)}` : ''}`}

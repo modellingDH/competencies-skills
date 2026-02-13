@@ -3,12 +3,14 @@ export interface ElectronAPI {
     getWorkspacePath: () => Promise<string | null>;
     loadWorkspace: (path: string) => Promise<Record<string, Record<string, string>>>;
     saveFile: (data: { dirPath: string; type: string; id: string; content: string }) => Promise<boolean>;
+    deleteFile: (data: { dirPath: string; type: string; id: string }) => Promise<boolean>;
 
     // Google Drive
     authenticateGoogleDrive: () => Promise<string | false>;
     getDriveUser: () => Promise<string | null>;
     logoutGoogleDrive: () => Promise<void>;
     listDriveFiles: () => Promise<any[]>;
+    saveToDrive: (data: { type: string; id: string; content: string }) => Promise<boolean>;
     // GitHub
     authenticateGitHub: () => Promise<string | false>;
     getGitHubUser: () => Promise<string | null>;

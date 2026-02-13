@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
+
 import type { ProjectState } from '@/services/project_manager';
 import { INITIAL_PROJECT_STATE } from '@/services/project_manager';
 import { RemoteRepositoryService, type RemoteEntity } from '@/lib/remote-repo-service';
@@ -16,6 +17,7 @@ interface WizardContextType {
     syncRemoteRepos: () => Promise<void>;
     cloneRemoteEntity: (entity: RemoteEntity) => Promise<boolean>;
     toggleRemoteRepo: (url: string) => void;
+    deleteEntity: (type: string, id: string) => void;
     removeRemoteRepo: (url: string) => void;
     workspacePath: string | null;
     openWorkspace: () => Promise<void>;
@@ -26,13 +28,41 @@ interface WizardContextType {
     driveUser: string | null;
     githubUser: string | null;
     refreshAuthStatus: () => Promise<void>;
+    saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+    setSaveStatus: (status: 'idle' | 'saving' | 'saved' | 'error') => void;
+    lastSaved: Date | null;
+    setLastSaved: (date: Date | null) => void;
+
+    // UI State for AI Panel
+    isAiPanelOpen: boolean;
+    setAiPanelOpen: (open: boolean) => void;
+    aiPanelAction: 'idle' | 'drafting' | 'revising' | 'suggesting' | null;
+    setAiPanelAction: (action: 'idle' | 'drafting' | 'revising' | 'suggesting' | null) => void;
+    aiPanelResult: string | null;
+    setAiPanelResult: (result: string | null) => void;
 }
 
 const WizardContext = createContext<WizardContextType | undefined>(undefined);
 
 export function WizardProvider({ children }: { children: ReactNode }) {
     const [activeStep, setActiveStep] = useState(0);
-    const [project, setProject] = useState<ProjectState>(INITIAL_PROJECT_STATE);
+    const [project, setProject] = useState<ProjectState>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('wizard_project_state');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
+                    console.error("Failed to recover project state", e);
+                }
+            }
+        }
+        return INITIAL_PROJECT_STATE;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('wizard_project_state', JSON.stringify(project));
+    }, [project]);
     const [remoteEntities, setRemoteEntities] = useState<RemoteEntity[]>([]);
     const [isSyncing, setIsSyncing] = useState(false);
     const [workspacePath, setWorkspacePath] = useState<string | null>(null);
@@ -40,6 +70,13 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     const [settingsTab, setSettingsTab] = useState(0);
     const [driveUser, setDriveUser] = useState<string | null>(null);
     const [githubUser, setGithubUser] = useState<string | null>(null);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+    const [isAiPanelOpen, setAiPanelOpen] = useState(false);
+    const [aiPanelAction, setAiPanelAction] = useState<'idle' | 'drafting' | 'revising' | 'suggesting' | null>(null);
+    const [aiPanelResult, setAiPanelResult] = useState<string | null>(null);
+    const [aiPanelContent, setAiPanelContent] = useState<string | null>(null);
 
     const remoteService = useMemo(() => new RemoteRepositoryService(), []);
 
@@ -67,17 +104,18 @@ export function WizardProvider({ children }: { children: ReactNode }) {
                         'meta-skills': 'metaSkills'
                     };
 
-                    Object.entries(files).forEach(([dirName, contentMap]) => {
-                        let key = mapDirToKey[dirName];
-                        if (!key && dirName.endsWith('s')) {
-                            // potential fallback
+                    // Reset all mapped collections to empty before loading from disk
+                    // This ensures deleted files don't persist as stale entries
+                    Object.values(mapDirToKey).forEach(key => {
+                        if (typeof newState[key] === 'object' && !Array.isArray(newState[key])) {
+                            (newState[key] as Record<string, string>) = {};
                         }
+                    });
 
-                        if (key) {
-                            const current = newState[key];
-                            if (current && typeof current === 'object' && !Array.isArray(current)) {
-                                (newState[key] as Record<string, string>) = { ...current, ...contentMap };
-                            }
+                    Object.entries(files).forEach(([dirName, contentMap]) => {
+                        const key = mapDirToKey[dirName];
+                        if (key && contentMap && typeof contentMap === 'object') {
+                            (newState[key] as Record<string, string>) = { ...contentMap };
                         }
                     });
                     return newState;
@@ -179,6 +217,32 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         }));
     };
 
+    const deleteEntity = (type: string, id: string) => {
+        updateProject(prev => {
+            let collectionKey: keyof ProjectState;
+            if (type === 'competency') collectionKey = 'competencies';
+            else if (type === 'meta-skill') collectionKey = 'metaSkills';
+            else collectionKey = `${type}s` as keyof ProjectState;
+
+            const currentCollection = (prev[collectionKey] || {}) as Record<string, string>;
+            const nextCollection = { ...currentCollection };
+            delete nextCollection[id];
+
+            return {
+                ...prev,
+                [collectionKey]: nextCollection
+            };
+        });
+
+        // Also delete from workspace filesystem if available
+        if (typeof window !== 'undefined' && window.electronAPI && workspacePath) {
+            const dirName = type === 'meta-skill' ? 'meta-skills' : `${type}s`;
+            window.electronAPI.deleteFile?.({ dirPath: workspacePath, type: dirName, id }).catch((e: any) => {
+                console.error('Failed to delete file from workspace:', e);
+            });
+        }
+    };
+
     return (
         <WizardContext.Provider value={{
             activeStep,
@@ -193,6 +257,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
             syncRemoteRepos,
             toggleRemoteRepo,
             removeRemoteRepo,
+            deleteEntity,
             workspacePath,
             openWorkspace,
             saveEntityToWorkspace,
@@ -205,6 +270,16 @@ export function WizardProvider({ children }: { children: ReactNode }) {
             driveUser,
             githubUser,
             refreshAuthStatus,
+            saveStatus,
+            setSaveStatus,
+            lastSaved,
+            setLastSaved,
+            isAiPanelOpen,
+            setAiPanelOpen,
+            aiPanelAction,
+            setAiPanelAction,
+            aiPanelResult,
+            setAiPanelResult,
             cloneRemoteEntity: async (entity) => {
                 try {
                     const content = await remoteService.fetchEntityContent(entity.rawUrl);

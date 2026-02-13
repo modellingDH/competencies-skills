@@ -60,7 +60,7 @@ export default async function SchemaPage({ params }: { params: Promise<{ type: s
     }));
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'auto', bgcolor: 'background.default' }}>
             {/* Header */}
             <AppBar position="sticky">
                 <Container maxWidth="lg">

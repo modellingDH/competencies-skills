@@ -21,7 +21,7 @@ export default async function HowToPage() {
     }
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
+        <Box sx={{ height: '100vh', overflow: 'auto', bgcolor: 'grey.50', py: 4 }}>
             <Container maxWidth="md">
                 {/* Header */}
                 <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>

@@ -3,6 +3,7 @@
 This guide explains how to take the entities you've created or found in the **Cognitive Library** and plug them into common AI agents and orchestrators.
 
 ## 1. Google Gemini (System Instructions)
+
 Gemini works best when you provide the Markdown content of a **Competency** or **Skill** directly into its System Instructions.
 
 - **Manual**: Copy the Markdown from the "View Details" page and paste it into the "System Instructions" field in Google AI Studio or the Gemini web interface.
@@ -10,6 +11,7 @@ Gemini works best when you provide the Markdown content of a **Competency** or *
 - **Tool Use**: If your Skill uses **Tools**, define them using the **Tool Schema (JSON)** provided in the Studio's sidebar.
 
 ## 2. OpenAI (GPTs & Assistants)
+
 OpenAI agents benefit from the structured nature of our library to reduce hallucinations.
 
 - **Custom GPTs**: Zip your project (Export ZIP) and upload it to the "Knowledge" section of your GPT, or copy the Skill Markdown into the "Instructions" box.
@@ -17,19 +19,22 @@ OpenAI agents benefit from the structured nature of our library to reduce halluc
 - **Tools**: Convert our Tool definitions into OpenAI's `functions` format (supported natively in our Exports).
 
 ## 3. Anthropic Claude (System Prompts)
+
 Claude's long context window and reasoning capabilities make it ideal for **Competencies**.
 
 - **System Prompt**: Inject the full text of a Competency into the system prompt.
 - **Artifacts**: Use the Library's generated JSON-LD as a reference "Artifact" that Claude can query during a conversation.
-- **Orchestration**: Direct Claude to follow the "Cognitive Markdown" workflows (e.g., `> ACTION`, `? DECISION`) as strict procedural guardrails.
+- **Orchestration**: Direct Claude to follow the structured markdown workflows as strict procedural guardrails. The clear step-by-step format ensures reliable execution.
 
 ## 4. Cursor (The IDE)
+
 You can use the library as a source of truth for your AI-assisted coding.
 
 - **.cursorrules**: Copy your Skill definitions into a `.cursorrules` file in your repository. This makes the agent follow your defined "Best Practices" for those specific tasks.
 - **@docs**: Add the URL of your hosted Library (or individual registry.json) to Cursor's `@docs` feature to make the agent aware of your available Tools and Skills.
 
 ## 5. Orchestrators (n8n)
+
 For automated workflows, use the library as a configuration layer.
 
 - **AI Agent Node**: Use the "AI Agent" node and connect a "Knowledge" source that points to your Library's exports.
@@ -39,4 +44,5 @@ For automated workflows, use the library as a configuration layer.
 ---
 
 ## Technical Maintenance
+
 This guide is maintained as a GitHub-backed Markdown file. You can contribute to it or improve the instructions for new agents by submitting a Pull Request to the repository.

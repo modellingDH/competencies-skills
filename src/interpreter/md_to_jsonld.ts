@@ -26,7 +26,7 @@ export interface JsonLdWorkflow {
 
 /**
  * Interpreter Class
- * Parses "Cognitive Markdown" (Nested Lists with Keywords) into JSON-LD.
+ * Parses structured markdown (Nested Lists with Keywords) into JSON-LD.
  */
 export class Interpreter {
 

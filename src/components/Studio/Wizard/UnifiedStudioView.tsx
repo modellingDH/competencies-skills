@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import { EntityNavigation } from '../EntityNavigation';
 import { CollapsibleGuidance } from '../CollapsibleGuidance';
-import { EntityEditor } from './EntityEditor';
+import { EntityEditor, getDefaultTemplate } from './EntityEditor';
 import { useWizard } from './WizardContext';
 import { generateId } from '@/utils/id-generator';
 import { WIZARD_GUIDANCE } from './guidance-config';
@@ -22,14 +22,14 @@ export function UnifiedStudioView() {
 
     const handleCreateEntity = (type: string, name: string) => {
         const id = generateId(name);
-        const entityType = type.slice(0, -1); // Remove 's' from plural
+        const entityType = type === 'competencies' ? 'competency' : type.slice(0, -1);
 
         // Create empty entity
         updateProject((prev) => ({
             ...prev,
             [type]: {
                 ...(prev[type as keyof typeof prev] as Record<string, string>),
-                [id]: `---\nid: ${id}\nname: ${name}\n---\n\n# Content goes here`
+                [id]: `---\nid: ${id}\nname: ${name}\n---\n\n${getDefaultTemplate(entityType)}`
             }
         }));
 

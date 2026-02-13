@@ -13,6 +13,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CopyButton } from './CopyButton';
+import { SYSTEM_ENTITIES } from '@/lib/system-skills';
 
 interface PageProps {
     params: Promise<{ type: string; id: string }>;
@@ -21,16 +22,18 @@ interface PageProps {
 
 // Generate static params for all entities
 export async function generateStaticParams() {
-    const types = ['competencies', 'concepts', 'skills', 'tools'];
+    console.log('[DEBUG] Generating params from CWD:', process.cwd());
+    const types = ['competencies', 'concepts', 'skills', 'tools', 'meta-skills', 'checklists'];
     const params = [];
 
     for (const pluralType of types) {
-        // concepts -> concept
+        // Singularization logic
         let singularType = pluralType.slice(0, -1);
         if (pluralType === 'competencies') singularType = 'competency';
 
         const typeDir = path.join(process.cwd(), 'library', pluralType);
         try {
+            console.log(`[DEBUG] Reading dir: ${typeDir}`);
             const files = await fs.readdir(typeDir);
             for (const file of files) {
                 if (file.endsWith('.md')) {
@@ -41,13 +44,27 @@ export async function generateStaticParams() {
                 }
             }
         } catch (e) {
-            // directory might not exist
+            console.warn(`[WARN] Creating params failed for ${typeDir}:`, e);
         }
     }
+    console.log(`[DEBUG] Generated ${params.length} static params.`);
+
+    // Add system entities
+    for (const entity of SYSTEM_ENTITIES) {
+        params.push({
+            type: entity.type,
+            id: entity.id
+        });
+    }
+    console.log(`[DEBUG] Total params (incl. system): ${params.length}`);
     return params;
 }
 
 async function loadEntityContent(type: string, id: string): Promise<string | null> {
+    // Check system entities first
+    const systemEntity = SYSTEM_ENTITIES.find(e => e.id === id && e.type === type);
+    if (systemEntity) return systemEntity.content;
+
     try {
         // Use plural form for directory name: competency → competencies, concept → concepts
         const typeDir = type.endsWith('y') ? type.slice(0, -1) + 'ies' : type + 's';
@@ -76,7 +93,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ t
     const entityName = id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
+        <Box sx={{ height: '100vh', overflow: 'auto', bgcolor: 'grey.50', py: 4 }}>
             <Container maxWidth="md">
                 {/* Header */}
                 <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>

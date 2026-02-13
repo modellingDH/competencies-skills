@@ -270,6 +270,110 @@ ipcMain.handle('drive:list', async () => {
     }
 });
 
+// Helper to find or create a folder in Drive
+async function ensureDriveFolder(drive, name, parentId = 'root') {
+    try {
+        const q = `mimeType='application/vnd.google-apps.folder' and name='${name}' and '${parentId}' in parents and trashed=false`;
+        const res = await drive.files.list({ q, spaces: 'drive', fields: 'files(id, name)' });
+        if (res.data.files.length > 0) {
+            return res.data.files[0].id;
+        }
+        // Create
+        const fileMetadata = {
+            name: name,
+            mimeType: 'application/vnd.google-apps.folder',
+            parents: [parentId]
+        };
+        const file = await drive.files.create({
+            resource: fileMetadata,
+            fields: 'id'
+        });
+        return file.data.id;
+    } catch (e) {
+        console.error(`Error ensuring drive folder ${name}:`, e);
+        return null;
+    }
+}
+
+// Helper to save/update file in Drive
+async function saveToDriveFolder(drive, folderId, fileName, content) {
+    try {
+        const q = `name='${fileName}' and '${folderId}' in parents and trashed=false`;
+        const res = await drive.files.list({ q, spaces: 'drive', fields: 'files(id, name)' });
+
+        const media = {
+            mimeType: 'text/markdown',
+            body: content
+        };
+
+        if (res.data.files.length > 0) {
+            // Update
+            const fileId = res.data.files[0].id;
+            await drive.files.update({
+                fileId: fileId,
+                media: media
+            });
+            return fileId; // Return ID
+        } else {
+            // Create
+            const fileMetadata = {
+                name: fileName,
+                parents: [folderId]
+            };
+            await drive.files.create({
+                resource: fileMetadata,
+                media: media,
+                fields: 'id'
+            });
+            return 'new';
+        }
+    } catch (e) {
+        console.error(`Error saving file ${fileName} to drive:`, e);
+        return null;
+    }
+}
+
+ipcMain.handle('drive:save', async (event, { type, id, content }) => {
+    if (!store) return false;
+    const tokens = store.get('googleTokens');
+    if (!tokens) return false;
+
+    const oAuth2Client = getOauth2Client();
+    oAuth2Client.setCredentials(tokens);
+    const drive = google.drive({ version: 'v3', auth: oAuth2Client });
+
+    try {
+        // 1. Ensure Root Folder "Cognitive Library"
+        const rootId = await ensureDriveFolder(drive, 'Cognitive Library');
+        if (!rootId) throw new Error("Could not access/create root folder");
+
+        // 2. Determine Subfolder
+        // Pluralize logic matching filesystem: competency->competencies, skill->skills
+        const typeFolder = type.endsWith('y') ? type.slice(0, -1) + 'ies' : type + 's';
+        const typeId = await ensureDriveFolder(drive, typeFolder, rootId);
+
+        if (typeId) {
+            await saveToDriveFolder(drive, typeId, `${id}.md`, content);
+        }
+
+        // 3. SPECIAL: Copy to 'meta-skills' if requested or implied by user
+        // User request: "make a copy to the metaskills as well"
+        // We will assume this applies to 'skill' type primarily, but let's do it for 'skill' specifically?
+        // Or if the user meant 'meta-skills' folder.
+        if (type === 'skill') {
+            const metaId = await ensureDriveFolder(drive, 'meta-skills', rootId);
+            if (metaId) {
+                await saveToDriveFolder(drive, metaId, `${id}.md`, content);
+            }
+        }
+
+        return true;
+    } catch (e) {
+        console.error('Drive Save Error', e);
+        return false;
+    }
+});
+
 // --- GitHub Integration ---
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || "";

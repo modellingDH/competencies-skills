@@ -67,7 +67,7 @@ export default function SourcesPage() {
     };
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
+        <Box sx={{ height: '100vh', overflow: 'auto', bgcolor: 'grey.50', py: 4 }}>
             <Container maxWidth="md">
                 <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
                     <LinkIconButton href="/" aria-label="back to home">

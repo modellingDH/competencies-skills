@@ -98,7 +98,7 @@ export function InstructionsStep() {
                     </ListItemIcon>
                     <ListItemText
                         primary="2. Authoring Studio"
-                        secondary="Create and edit your entities using an intuitive editor with cognitive notations. The studio provides real-time autosave, entity cross-referencing, and contextual guidelines to help you author competencies, concepts, skills, and tools."
+                        secondary="Create and edit your entities using a structured markdown editor. The studio provides real-time autosave, entity cross-referencing, and contextual guidelines to help you author competencies, concepts, skills, and tools."
                     />
                 </ListItem>
                 <ListItem>
@@ -107,7 +107,7 @@ export function InstructionsStep() {
                     </ListItemIcon>
                     <ListItemText
                         primary="3. Validation & Export"
-                        secondary="Validate your work for completeness and consistency. The system checks internal references (@skill:, @concept:, etc.), generates JSON-LD output, and provides instructions for submitting to GitHub."
+                        secondary="Validate your work for completeness and consistency. The system checks internal references, generates JSON-LD output, and provides instructions for submitting to GitHub."
                     />
                 </ListItem>
             </List>
@@ -145,8 +145,8 @@ export function InstructionsStep() {
                     🌳 Skills
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                    Discrete, reusable procedures that define how to accomplish specific tasks. Skills use cognitive
-                    workflow notation to specify decision trees, actions, context checks, and failure handling. They
+                    Discrete, reusable procedures that define how to accomplish specific tasks. Skills use plain
+                    structured markdown to specify decision trees, actions, context checks, and failure handling. They
                     reference required tools and include examples. Example: 'Analyze Log File' with step-by-step reasoning.
                 </Typography>
             </Paper>

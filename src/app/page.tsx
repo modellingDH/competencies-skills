@@ -21,7 +21,7 @@ import Link from 'next/link';
 
 export default function Home() {
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'auto', bgcolor: 'background.default' }}>
             {/* Navigation Bar */}
             <AppBar position="sticky" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
                 <Container maxWidth="lg">
@@ -50,7 +50,7 @@ export default function Home() {
                 {/* Hero Section - Lean & Direct */}
                 <Box sx={{ textAlign: 'center', mb: 10, maxWidth: 800, mx: 'auto' }}>
                     <Chip
-                        label="v2.0: AI-First Workflow"
+                        label="v3.0: Structured Markdown"
                         size="small"
                         sx={{ mb: 3, bgcolor: 'secondary.main', color: 'white', fontWeight: 'bold' }}
                     />
@@ -76,7 +76,7 @@ export default function Home() {
                     <Box sx={{ mt: 4, display: 'inline-flex', alignItems: 'center', gap: 1, bgcolor: 'secondary.50', px: 2, py: 1, borderRadius: 2 }}>
                         <AutoFixHighIcon fontSize="small" color="secondary" />
                         <Typography variant="caption" fontWeight="bold">
-                            New: <Link href="/library/meta-skill/using_meta_skills" style={{ color: 'inherit', textDecoration: 'underline' }}>How to feed skills to AI?</Link>
+                            New: <Link href="/how-to" style={{ color: 'inherit', textDecoration: 'underline' }}>How to feed skills to AI?</Link>
                         </Typography>
                     </Box>
                 </Box>
@@ -97,10 +97,10 @@ export default function Home() {
                                     Select Meta-Skill
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Don't write from scratch. Choose a <strong>Meta-Skill</strong> (like <code>skill_template</code>) from the library.
+                                    Don't write from scratch. Browse existing <strong>Skills</strong> and <strong>Concepts</strong> in the library as templates and guides.
                                 </Typography>
                                 <Box sx={{ mt: 2 }}>
-                                    <Chip label="@meta:skill_template" size="small" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', bgcolor: 'secondary.50' }} />
+                                    <Chip label="Browse Library" size="small" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', bgcolor: 'secondary.50' }} />
                                 </Box>
                             </Paper>
                         </Grid>
@@ -113,7 +113,7 @@ export default function Home() {
                                     Generate
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Paste the Meta-Skill into your agent's prompt. Ask it to generate the specific skill you need.
+                                    Paste the skill into your agent's context window. Let AI draft, evaluate, or refine your new skill.
                                 </Typography>
                             </Paper>
                         </Grid>
@@ -126,7 +126,7 @@ export default function Home() {
                                     Register
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Bring the generated markdown into the <strong>Studio</strong>. Validate references and save it to the registry.
+                                    Bring the generated markdown into the <strong>Studio</strong>. Review, refine, and save it to the registry.
                                 </Typography>
                             </Paper>
                         </Grid>
@@ -142,7 +142,7 @@ export default function Home() {
                                 One Library, <br /> Two Audiences
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ mb: 4, fontSize: '1.1rem' }}>
-                                The Cognitive Markdown format is designed to be readable by both LLMs and Humans. This ensures that your documentation <strong>is</strong> your code.
+                                Skills are written in plain structured markdown — readable by both humans and LLMs. Standard links connect entities into a rich knowledge graph.
                             </Typography>
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
@@ -151,7 +151,7 @@ export default function Home() {
                                     <Avatar sx={{ bgcolor: 'primary.main' }}>AI</Avatar>
                                     <Box>
                                         <Typography variant="subtitle1" fontWeight="bold">For Agents</Typography>
-                                        <Typography variant="body2" color="text.secondary">Follows precise logic (`@`, `{'>'}`) to execute complex workflows deterministically.</Typography>
+                                        <Typography variant="body2" color="text.secondary">Processes clear, structured markdown with linked entities for precise, context-rich execution.</Typography>
                                     </Box>
                                 </Paper>
                                 <Paper sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -170,7 +170,7 @@ export default function Home() {
                 <Box textAlign="center">
                     <Typography variant="h6" gutterBottom>Ready to start?</Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, flexWrap: 'wrap', mt: 2 }}>
-                        <LinkButton href="/library/meta-skill/interaction_structurer" variant="text">Learn how to extract skills</LinkButton>
+                        <LinkButton href="/how-to" variant="text">Learn how to integrate with AI</LinkButton>
                         <LinkButton href="/library" variant="text">Explore the Library</LinkButton>
                         <LinkButton href="/studio" variant="text">Open Authoring Studio</LinkButton>
                     </Box>

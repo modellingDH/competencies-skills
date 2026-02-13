@@ -23,7 +23,7 @@ export const InstructionalAndContextSchema = z.object({
 // We store this as raw Markdown strings to be parsed by the Interpreter, 
 // OR as a parsed JSON structure if we strictly validate pre-compilation.
 // For the Schema, we'll keep the raw markdown content to be validated by the Interpreter.
-export const CognitiveWorkflowSchema = z.string().describe("Cognitive Markdown content");
+export const CognitiveWorkflowSchema = z.string().describe("Structured markdown content");
 
 // 3. Interpretation Rules (The "Glossary")
 export const InterpretationRuleSchema = z.object({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -42,6 +42,10 @@ import Alert from '@mui/material/Alert';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { SYSTEM_ENTITIES } from '@/lib/system-skills';
 import { PageInfoTooltip } from '@/components/PageInfoTooltip';
+import { useSmartSearch } from '@/hooks/useSmartSearch';
+import { useAI } from '@/contexts/AIContext';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 // Example entities metadata (in production, this would come from file system or API)
 // Example entities removed. Now fetching from project state.
@@ -100,6 +104,10 @@ export default function LibraryPage() {
     const [typeFilter, setTypeFilter] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<'name' | 'type' | 'source'>('name');
     const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    // Smart Search
+    const { generate, isModelReady } = useAI();
+    const { smartResult, analyzeQuery, resetSmartSearch } = useSmartSearch(generate, isModelReady);
 
     const allEntities = useMemo<Entity[]>(() => {
         if (!project) return [];
@@ -198,6 +206,19 @@ export default function LibraryPage() {
             return 0;
         });
     }, [searchQuery, typeFilter, allEntities, fuse, sortBy]);
+
+    // Debounced smart search analysis
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            resetSmartSearch();
+            return;
+        }
+        const timer = setTimeout(() => {
+            const entityNames = allEntities.map(e => e.name);
+            analyzeQuery(searchQuery, filteredEntities.length, entityNames);
+        }, 600);
+        return () => clearTimeout(timer);
+    }, [searchQuery, filteredEntities.length, allEntities]);
 
     const stats = useMemo(() => {
         return {
@@ -484,14 +505,71 @@ export default function LibraryPage() {
                 />
 
                 {filteredEntities.length === 0 && (
-                    <Box sx={{ textAlign: 'center', py: 8, opacity: 0.6 }}>
-                        <AccountTreeIcon sx={{ fontSize: 48, mb: 1, color: 'text.disabled' }} />
-                        <Typography variant="h6" color="text.secondary">
-                            No library entities found
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Try searching for something else
-                        </Typography>
+                    <Box sx={{ textAlign: 'center', py: 6, opacity: 0.9 }}>
+                        {smartResult.isProcessing ? (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                <CircularProgress size={28} />
+                                <Typography variant="body2" color="text.secondary">
+                                    Gemma is analyzing your search...
+                                </Typography>
+                            </Box>
+                        ) : smartResult.generateList && smartResult.generateList.length > 0 ? (
+                            <Box sx={{ maxWidth: 600, mx: 'auto', textAlign: 'left' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                    <AutoAwesomeIcon color="secondary" />
+                                    <Typography variant="subtitle1" fontWeight="bold">
+                                        {smartResult.aiSuggestion}
+                                    </Typography>
+                                </Box>
+                                <Grid container spacing={1.5}>
+                                    {smartResult.generateList.map((item) => (
+                                        <Grid key={item.id} size={{ xs: 12, sm: 6 }}>
+                                            <Paper
+                                                variant="outlined"
+                                                sx={{ p: 2, borderRadius: 2, cursor: 'pointer', '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' }, transition: 'all 0.2s' }}
+                                            >
+                                                <Typography variant="subtitle2" fontWeight="bold">
+                                                    {item.name}
+                                                </Typography>
+                                                <Chip label={item.type} size="small" sx={{ mt: 0.5, mb: 0.5, textTransform: 'capitalize' }} />
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                    {item.description}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </Box>
+                        ) : smartResult.aiSuggestion ? (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                <AutoAwesomeIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
+                                <Typography variant="body1" color="text.secondary">
+                                    {smartResult.aiSuggestion}
+                                </Typography>
+                                {smartResult.createProposal && (
+                                    <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        startIcon={<AddCircleOutlineIcon />}
+                                        component={Link}
+                                        href="/studio"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        Create "{smartResult.createProposal.name}"
+                                    </Button>
+                                )}
+                            </Box>
+                        ) : (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                                <AccountTreeIcon sx={{ fontSize: 48, color: 'text.disabled' }} />
+                                <Typography variant="h6" color="text.secondary">
+                                    No library entities found
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Try a different search, or describe what you need
+                                </Typography>
+                            </Box>
+                        )}
                     </Box>
                 )}
             </Container>
